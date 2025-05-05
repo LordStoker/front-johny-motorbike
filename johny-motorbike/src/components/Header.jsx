@@ -31,7 +31,7 @@ export default function Header() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <NavLink to="/" className="flex items-center">
-                <img src={HelmetIcon} alt="Logo" className={`h-8 w-8 ${isTransparent ? 'opacity-100' : 'opacity-80'}`} />
+                <img src={HelmetIcon} alt="Logo" className={`h-8 w-8 mr-2 ${isTransparent ? 'opacity-100' : 'opacity-80'}`} />
               <span className={`self-center text-lg font-semibold whitespace-nowrap ${isTransparent ? 'text-white' : 'text-blue-800'}`}>
                 Johny Motorbike
               </span>
@@ -102,11 +102,11 @@ export default function Header() {
               <span className="sr-only">Abrir menú principal</span>
               {/* Icono cuando está cerrado */}
               {!isMenuOpen ? (
-                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               ) : (
-                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}

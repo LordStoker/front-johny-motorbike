@@ -23,6 +23,85 @@ export const AppProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // --- AUTENTICACIÓN ---
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem('user')
+    return storedUser ? JSON.parse(storedUser) : null
+  })
+  const [authError, setAuthError] = useState(null)
+  const [authLoading, setAuthLoading] = useState(false)
+
+  // Login
+  const login = async (email, password) => {
+    setAuthLoading(true)
+    setAuthError(null)
+    try {
+      const res = await axios.post(`${API_URL}/login`, { email, password })
+      if (res.data && res.data.user && res.data.access_token) {
+        setUser(res.data.user)
+        localStorage.setItem('user', JSON.stringify(res.data.user))
+        localStorage.setItem('token', res.data.access_token)
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.access_token}`
+        return true
+      } else {
+        setAuthError('Respuesta inesperada del servidor')
+        return false
+      }
+    } catch (err) {
+      setAuthError(
+        err.response?.data?.message || 'Error al iniciar sesión. Verifica tus datos.'
+      )
+      return false
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  // Register
+  const register = async (name, last_name, email, password, password_confirmation) => {
+    setAuthLoading(true)
+    setAuthError(null)
+    try {
+      const res = await axios.post(`${API_URL}/register`, {
+        name, last_name, email, password, password_confirmation
+      })
+      if (res.data && res.data.user && res.data.access_token) {
+        setUser(res.data.user)
+        localStorage.setItem('user', JSON.stringify(res.data.user))
+        localStorage.setItem('token', res.data.access_token)
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.access_token}`
+        return true
+      } else {
+        setAuthError('Respuesta inesperada del servidor')
+        return false
+      }
+    } catch (err) {
+      setAuthError(
+        err.response?.data?.message || 'Error al registrarse. Verifica tus datos.'
+      )
+      return false
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  // Logout
+  const logout = () => {
+    setUser(null)
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+    delete axios.defaults.headers.common['Authorization']
+  }
+
+  // Mantener sesión si hay token
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      // Opcional: podrías validar el token con un endpoint /me
+    }
+  }, [])
+
   // Función para cargar todos los datos iniciales
   const loadInitialData = async () => {
     setLoading(true)
@@ -127,7 +206,13 @@ export const AppProvider = ({ children }) => {
     loading,
     error,
     reloadResource,
-    loadInitialData
+    loadInitialData,
+    user,
+    authError,
+    authLoading,
+    login,
+    register,
+    logout,
   }
 
   return (

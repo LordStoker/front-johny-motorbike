@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import HelmetIcon from '../assets/helmet-favicon.png'
+import { useAppContext } from '../context/AppContext'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const location = useLocation()
   const isHomePage = location.pathname === '/'
+  const { user, logout } = useAppContext()
+  const navigate = useNavigate()
+
+  // Estado para el dropdown de login/registro
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   // Efecto para detectar el scroll y cambiar el estilo del header
   useEffect(() => {
@@ -21,8 +27,27 @@ export default function Header() {
     }
   }, [])
 
+  // Cerrar el dropdown al hacer clic fuera
+  useEffect(() => {
+    if (!isDropdownOpen) return
+    const handleClick = (e) => {
+      if (!document.getElementById('dropdown-acceder')?.contains(e.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [isDropdownOpen])
+
   // Determinar si el header debe ser transparente (solo en la página de inicio y cuando no hay scroll)
   const isTransparent = isHomePage && !isScrolled
+
+  // Función para manejar logout
+  const handleLogout = () => {
+    logout()
+    setIsMenuOpen(false)
+    navigate('/')
+  }
 
   return (
     <header className={`fixed w-full z-50 transition-all duration-300 ${isTransparent ? 'bg-transparent' : 'bg-white shadow-lg'}`}>
@@ -85,6 +110,46 @@ export default function Header() {
               >
                 Crear Ruta
               </NavLink>
+
+              {user ? (
+                <>
+                  <span className={`px-3 py-2 text-sm font-medium ${isTransparent ? 'text-white' : 'text-blue-800'}`}>Hola {user.name}</span>
+                  <button
+                    onClick={handleLogout}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors bg-red-600 text-white hover:bg-red-700 ml-2`}
+                  >
+                    Cerrar sesión
+                  </button>
+                </>
+              ) : (
+                <div className="relative" id="dropdown-acceder">
+                  <button
+                    type="button"
+                    onClick={() => setIsDropdownOpen((v) => !v)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors border ${isTransparent ? 'border-white text-white hover:bg-white hover:text-blue-800' : 'border-blue-800 text-blue-800 hover:bg-blue-800 hover:text-white'}`}
+                  >
+                    Acceder
+                  </button>
+                  {isDropdownOpen && (
+                    <div className="absolute left-0 mt-2 w-40 bg-white border border-blue-100 rounded-lg shadow-lg z-50 animate-fade-in">
+                      <NavLink
+                        to="/login"
+                        className="block px-4 py-2 text-blue-800 hover:bg-blue-50 hover:text-blue-900 rounded-t-lg"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        Iniciar sesión
+                      </NavLink>
+                      <NavLink
+                        to="/register"
+                        className="block px-4 py-2 text-blue-800 hover:bg-blue-50 hover:text-blue-900 rounded-b-lg"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        Registrarse
+                      </NavLink>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           
@@ -156,6 +221,35 @@ export default function Header() {
           >
             Crear Ruta
           </NavLink>
+
+          {user ? (
+            <>
+              <span className="block px-3 py-2 text-base font-medium text-blue-800">Hola {user.name}</span>
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium bg-red-600 text-white hover:bg-red-700 mt-2"
+              >
+                Cerrar sesión
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink
+                to="/login"
+                className="block px-3 py-2 rounded-md text-base font-medium text-blue-800 hover:bg-gray-200"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Iniciar sesión
+              </NavLink>
+              <NavLink
+                to="/register"
+                className="block px-3 py-2 rounded-md text-base font-medium text-blue-800 border border-blue-800 mt-1 hover:bg-blue-800 hover:text-white"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Registrarse
+              </NavLink>
+            </>
+          )}
         </div>
       </div>
     </header>

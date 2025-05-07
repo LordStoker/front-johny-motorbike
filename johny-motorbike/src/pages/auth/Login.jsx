@@ -101,6 +101,9 @@ export default function Login() {
             <div className="text-sm">
               <Link to="/register" className="text-blue-700 hover:underline font-semibold">¿No tienes cuenta? Regístrate</Link>
             </div>
+            <div className="text-sm">
+              <Link to="/forgot-password" className="text-blue-600 hover:text-blue-800 hover:underline">¿Olvidaste tu contraseña?</Link>
+            </div>
           </div>
           <button
             type="submit"

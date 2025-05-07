@@ -9,6 +9,8 @@ import NewRuta from './pages/NewRuta'
 import ShowRuta from './pages/ShowRuta'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
 import { AppProvider } from './context/AppContext'
 
 export default function App() {
@@ -26,6 +28,8 @@ export default function App() {
                 <Route path="/nueva-ruta" element={<NewRuta />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </Layout>

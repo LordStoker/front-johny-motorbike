@@ -85,6 +85,91 @@ export const AppProvider = ({ children }) => {
     }
   }
 
+  // Solicitar enlace para recuperar contraseña
+  const sendPasswordResetLink = async (email) => {
+    setAuthLoading(true)
+    setAuthError(null)
+    try {
+      // Usamos la ruta de API para recuperación de contraseña
+      const res = await axios.post(`${API_URL}/forgot-password`, 
+        { email },
+        { 
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          }
+        }
+      );
+      
+      if (res.data && res.data.status === 'success') {
+        return true;
+      } else {
+        // No mostramos error específico para evitar revelar si el email existe en la BD
+        return true;
+      }
+    } catch (err) {
+      // Es importante no revelar si el correo existe o no, por seguridad
+      console.error('Error en solicitud de recuperación:', err);
+      console.error('Detalles del error:', err.response?.data); // Capturamos detalles del error
+      
+      if (err.response?.status === 429) {
+        setAuthError('Demasiadas solicitudes. Inténtalo de nuevo más tarde.');
+        return false;
+      }
+      
+      // Si hay un error específico, lo mostramos (temporal para depuración)
+      if (err.response?.status === 400) {
+        setAuthError(err.response?.data?.message || 'Error en la solicitud. Revisa los datos e intenta de nuevo.');
+        return false;
+      }
+      
+      // No mostrar otros errores, fingir que todo fue bien para no revelar información
+      return true;
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  // Restablecer contraseña
+  const resetPassword = async (email, password, password_confirmation, token) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      // Usamos la ruta de API para reset de contraseña
+      const res = await axios.post(`${API_URL}/reset-password`, 
+        {
+          email,
+          password,
+          password_confirmation,
+          token
+        },
+        { 
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          }
+        }
+      );
+      
+      if (res.data && res.data.status === 'success') {
+        return true;
+      } else {
+        setAuthError('No se pudo restablecer la contraseña. Inténtalo de nuevo.');
+        return false;
+      }
+    } catch (err) {
+      console.error('Error al restablecer contraseña:', err);
+            
+      setAuthError(
+        err.response?.data?.message || 
+        'Error al restablecer la contraseña. El enlace podría haber expirado.'
+      );
+      return false;
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
   // Logout
   const logout = () => {
     setUser(null)
@@ -212,6 +297,8 @@ export const AppProvider = ({ children }) => {
     authLoading,
     login,
     register,
+    sendPasswordResetLink, // Nueva función
+    resetPassword,         // Nueva función
     logout,
   }
 

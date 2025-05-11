@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import defaultRouteImage from '../assets/default-route-image.jpg'
 import { useAppContext } from '../context/AppContext'
+import StarRating from './StarRating'
 
 /**
  * Componente para mostrar una tarjeta de ruta
@@ -10,24 +11,43 @@ import { useAppContext } from '../context/AppContext'
  * @param {string} props.className - Clases adicionales para estilizar el contenedor
  */
 const RutaCard = ({ ruta, className = '' }) => {
-  const { user, checkFavorite, toggleFavorite } = useAppContext();
+  const { user, checkFavorite, toggleFavorite, favoriteRouteIds } = useAppContext();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  
-  // Verificar si la ruta es favorita al cargar el componente
+  // Verificar si la ruta es favorita al cargar el componente - versión altamente optimizada
   useEffect(() => {
+    let isMounted = true; // Bandera para evitar actualizar el estado si el componente se desmonta
+    
     const checkIfFavorite = async () => {
       if (user && ruta?.id) {
+        // Evitamos cualquier renderización innecesaria precargando el estado
+        // desde favoriteRouteIds que ya obtuvimos del contexto
+        const parsedRouteId = parseInt(ruta.id);
+        
+        // Verificación local instantánea sin esperar al servidor
+        if (favoriteRouteIds.has(parsedRouteId)) {
+          if (isMounted) setIsFavorite(true);
+          return; // Si ya sabemos que es favorita, no necesitamos consultar el servidor
+        }
+        
+        // Si no sabemos con certeza, consultamos el servidor
+        // pero solo si es necesario (el componente sigue montado)
         const favorite = await checkFavorite(ruta.id);
-        setIsFavorite(favorite);
+        if (isMounted) setIsFavorite(favorite);
       }
     };
     
     checkIfFavorite();
-  }, [user, ruta?.id, checkFavorite]);
-  
-  // Función para manejar el clic en el botón de favorito
+    
+    // Limpieza para evitar memory leaks y actualizaciones después del desmontaje
+    return () => {
+      isMounted = false;
+    };
+  }, [user, ruta?.id, checkFavorite, favoriteRouteIds]);
+    // Estado para manejar la animación del corazón
+  const [heartKey, setHeartKey] = useState(0); // Clave para forzar una nueva animación
+  // Función para manejar el clic en el botón de favorito - versión optimizada
   const handleToggleFavorite = async (e) => {
     e.preventDefault(); // Evitar que el enlace de la tarjeta se active
     e.stopPropagation();
@@ -38,56 +58,94 @@ const RutaCard = ({ ruta, className = '' }) => {
       return;
     }
     
+    // Actualizamos la UI inmediatamente sin esperar la respuesta del servidor
+    setIsFavorite(!isFavorite); // Cambiamos el estado visual inmediatamente
+    setHeartKey(prevKey => prevKey + 1); // Actualizamos la clave para forzar una nueva animación
+    
+    // El spinner solo se mostrará brevemente para indicar que la acción está en proceso
+    // pero el cambio visual del corazón ya ocurrió
     setIsLoading(true);
-    const result = await toggleFavorite(ruta.id);
-    setIsFavorite(result);
-    setIsLoading(false);
+    
+    // Hacemos la petición a la API en segundo plano
+    toggleFavorite(ruta.id)
+      .then(result => {
+        // Solo si el resultado difiere de nuestra actualización optimista, lo corregimos
+        if (result !== !isFavorite) {
+          setIsFavorite(result);
+        }
+      })
+      .catch(error => {
+        console.error('Error al cambiar estado de favorito:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
   
-  if (!ruta) return null
-
+  // Si no hay datos de la ruta, no mostrar nada
+  if (!ruta) {
+    return null;
+  }
+  
+  // Imagen de la ruta o imagen por defecto
+  const routeImage = ruta.route_images && ruta.route_images[0]
+    ? `${import.meta.env.VITE_API_URL}/storage/${ruta.route_images[0].url}`
+    : defaultRouteImage;
+  
   return (
-    <div 
-      className={`bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition ${className}`}
-    >
-      {/* Imagen de la ruta */}      <div className="relative w-full h-48 overflow-hidden">
+    <div className={`bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col ${className}`}>
+      {/* Imagen de la ruta */}
+      <div className="relative w-full h-48 overflow-hidden">
         <img 
-          src={ruta.route_images && ruta.route_images.length > 0 ? ruta.route_images[0].url : defaultRouteImage} 
-          alt={ruta.name} 
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-        />
-        
-        {/* Botón de favorito */}
-        <button
-          onClick={handleToggleFavorite}
+          src={routeImage}
+          alt={ruta.name}
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+        />        <button          onClick={handleToggleFavorite}
           disabled={isLoading}
-          className={`absolute top-3 right-3 p-2 rounded-full ${
-            isFavorite 
-              ? 'bg-red-100 text-red-500 hover:bg-red-200' 
-              : 'bg-white/80 text-gray-600 hover:bg-gray-100'
-          } transition-colors shadow-md`}
-        >
-          {isLoading ? (
-            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : (
+          className="absolute top-3 right-3 bg-white/70 hover:bg-white p-1.5 rounded-full shadow-sm transition-all active:scale-90 hover:shadow-md transform hover:-translate-y-0.5"
+          aria-label={isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"}
+        >          {isLoading ? (
             <svg 
+              className="animate-spin h-5 w-5 text-blue-500" 
               xmlns="http://www.w3.org/2000/svg" 
-              className="h-5 w-5" 
-              fill={isFavorite ? "currentColor" : "none"}
+              fill="none" 
+              viewBox="0 0 24 24"
+            >
+              <circle 
+                className="opacity-25" 
+                cx="12" 
+                cy="12" 
+                r="10" 
+                stroke="currentColor" 
+                strokeWidth="4"
+              />
+              <path 
+                className="opacity-75" 
+                fill="currentColor" 
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          ) : (            <svg 
+              xmlns="http://www.w3.org/2000/svg"
+              key={heartKey} // Usando la clave para forzar una nueva animación
+              className={`h-5 w-5 ${isFavorite ? 'text-red-500' : 'text-gray-400'} transition-all duration-100 ${isFavorite ? 'animate-[pulse_0.3s_ease-in-out_1]' : 'hover:scale-110 hover:text-red-400'}`} 
+              fill={isFavorite ? "currentColor" : "none"} 
               viewBox="0 0 24 24" 
               stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            >              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={1.5} 
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                className={isFavorite ? "animate-heartbeat" : ""}
+              />
             </svg>
           )}
         </button>
       </div>
       
-      <div className="p-5">
-        {/* Título y descripción */}
+      {/* Contenido de la tarjeta */}
+      <div className="p-5 flex-1 flex flex-col">
         <h2 className="text-xl font-bold text-blue-800 mb-2">{ruta.name}</h2>
         <p className="text-gray-700 mb-3 line-clamp-2">
           {ruta.description}
@@ -113,6 +171,23 @@ const RutaCard = ({ ruta, className = '' }) => {
           </span>
         </div>
         
+        {/* Comentarios y valoraciones */}
+        <div className="flex justify-between text-sm text-gray-600 mb-3">
+          {/* Contador de comentarios */}
+          <div className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+            <span>{ruta.comments_count || 0}</span>
+          </div>          {/* Valoración media con estrellas */}
+          <StarRating 
+            rating={ruta.totalScore && ruta.countScore ? ruta.totalScore / ruta.countScore : 0} 
+            size="sm"
+            showValue={true}
+            className="hover:opacity-80 transition-opacity"
+          />
+        </div>
+        
         {/* Etiquetas de terreno y paisaje */}
         <div className="flex flex-wrap gap-2 mb-4">
           {ruta.terrain && (
@@ -130,11 +205,27 @@ const RutaCard = ({ ruta, className = '' }) => {
         {/* Botón para ver detalles */}
         <Link 
           to={`/rutas/${ruta.id}`} 
-          className="block text-center bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition"
+          className="block text-center bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition mt-auto"
         >
           Ver detalles
         </Link>
       </div>
+      
+      {/* Estilos para animaciones avanzadas */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes heartbeat {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.2); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+          }
+          .animate-heartbeat {
+            animation: heartbeat 0.5s ease-in-out;
+          }
+        `
+      }} />
     </div>
   )
 }

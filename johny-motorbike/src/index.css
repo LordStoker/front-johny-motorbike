@@ -8,3 +8,37 @@
     @apply bg-gray-50;
   }
 }
+
+@layer utilities {
+  /* Animaciones para elementos de UI */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulseHeart {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-pulseHeart {
+    animation: pulseHeart 0.4s ease-in-out;
+  }
+}

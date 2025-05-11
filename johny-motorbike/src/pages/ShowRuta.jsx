@@ -5,9 +5,8 @@ import RutaDetail from '../components/RutaDetail'
 
 export default function ShowRuta() {
   const { id } = useParams()
-  const { routes, loading, error } = useAppContext()
+  const { routes, loading, error, user, loadFavoriteRouteIds } = useAppContext()
   const [ruta, setRuta] = useState(null)
-
   useEffect(() => {
     // Buscar la ruta por su ID cuando los datos estén disponibles
     if (routes.length > 0) {
@@ -15,6 +14,13 @@ export default function ShowRuta() {
       setRuta(foundRuta || null)
     }
   }, [routes, id])
+    // Precargamos los IDs de rutas favoritas al renderizar la página
+  useEffect(() => {
+    if (user) {
+      loadFavoriteRouteIds();
+    }
+    // Quitamos loadFavoriteRouteIds de las dependencias ya que ahora está memoizada con useCallback
+  }, [user])
 
   if (loading) {
     return (

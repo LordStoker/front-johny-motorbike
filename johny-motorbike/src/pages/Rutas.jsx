@@ -1,9 +1,31 @@
 import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
 import { useAppContext } from '../context/AppContext'
 import RutaCard from '../components/RutaCard'
 
 export default function Rutas() {
-  const { routes, loading, error } = useAppContext()
+  const { routes, loading, error, user, loadFavoriteRouteIds } = useAppContext()
+    // Precargamos los IDs de rutas favoritas al renderizar la página con una estrategia optimizada
+  useEffect(() => {
+    if (user) {
+      // Usamos requestIdleCallback (o un polyfill) para cargar favoritos cuando el navegador esté inactivo
+      // Esto evita bloquear el renderizado inicial de la página
+      const loadFavoritesWhenIdle = () => {
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(() => {
+            loadFavoriteRouteIds();
+          }, { timeout: 2000 }); // Con timeout para asegurar que se ejecute incluso en navegadores ocupados
+        } else {
+          // Fallback para navegadores que no soportan requestIdleCallback
+          setTimeout(() => {
+            loadFavoriteRouteIds();
+          }, 100);
+        }
+      };
+      
+      loadFavoritesWhenIdle();
+    }
+  }, [user, loadFavoriteRouteIds]);
 
   if (loading) {
     return (

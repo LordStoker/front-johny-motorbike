@@ -11,6 +11,9 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
+import Profile from './pages/user/Profile'
+import ChangePassword from './pages/user/ChangePassword'
+import FavoriteRoutes from './pages/FavoriteRoutes'
 import { AppProvider } from './context/AppContext'
 
 export default function App() {
@@ -30,6 +33,9 @@ export default function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/perfil" element={<Profile />} />
+                <Route path="/cambiar-password" element={<ChangePassword />} />
+                <Route path="/favoritos" element={<FavoriteRoutes />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </Layout>

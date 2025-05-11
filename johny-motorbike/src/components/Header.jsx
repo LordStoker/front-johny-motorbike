@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import HelmetIcon from '../assets/helmet-favicon.png'
 import { useAppContext } from '../context/AppContext'
@@ -13,6 +13,11 @@ export default function Header() {
 
   // Estado para el dropdown de login/registro
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  
+  // Estado para el menú desplegable del usuario
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  // Referencia para el menú desplegable del usuario (para cerrar al hacer clic fuera)
+  const userMenuRef = useRef(null)
 
   // Efecto para detectar el scroll y cambiar el estilo del header
   useEffect(() => {
@@ -39,6 +44,18 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [isDropdownOpen])
 
+  // Cerrar el menú de usuario al hacer clic fuera
+  useEffect(() => {
+    if (!isUserMenuOpen) return
+    const handleClick = (e) => {
+      if (!userMenuRef.current?.contains(e.target)) {
+        setIsUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [isUserMenuOpen])
+
   // Determinar si el header debe ser transparente (solo en la página de inicio y cuando no hay scroll)
   const isTransparent = isHomePage && !isScrolled
 
@@ -46,6 +63,7 @@ export default function Header() {
   const handleLogout = () => {
     logout()
     setIsMenuOpen(false)
+    setIsUserMenuOpen(false)
     navigate('/')
   }
 
@@ -98,7 +116,7 @@ export default function Header() {
               
               <NavLink 
                 to="/nueva-ruta"
-                className={({ isActive }) => 
+                className={({ isActive }) =>
                   `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive 
                       ? 'bg-blue-700 text-white' 
@@ -112,15 +130,82 @@ export default function Header() {
               </NavLink>
 
               {user ? (
-                <>
-                  <span className={`px-3 py-2 text-sm font-medium ${isTransparent ? 'text-white' : 'text-blue-800'}`}>Hola {user.name}</span>
+                <div className="relative" ref={userMenuRef}>
                   <button
-                    onClick={handleLogout}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors bg-red-600 text-white hover:bg-red-700 ml-2`}
+                    type="button"
+                    onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isTransparent 
+                        ? 'text-white hover:bg-blue-700/30' 
+                        : 'text-blue-800 hover:bg-gray-200'
+                    }`}
                   >
-                    Cerrar sesión
+                    <span className="mr-1">Hola {user.name}</span>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className={`h-4 w-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
-                </>
+                  
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in">
+                      <NavLink
+                        to="/perfil"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          Mi Perfil
+                        </div>
+                      </NavLink>
+                        <NavLink
+                        to="/cambiar-password"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                          Cambiar Contraseña
+                        </div>
+                      </NavLink>
+                      
+                      <NavLink
+                        to="/favoritos"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                          Mis Rutas Favoritas
+                        </div>
+                      </NavLink>
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-800 border-t border-gray-200"
+                      >
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          Cerrar sesión
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="relative" id="dropdown-acceder">
                   <button
@@ -182,7 +267,7 @@ export default function Header() {
 
       {/* Menú móvil */}
       <div 
-        className={`md:hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`} 
+        className={`md:hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`} 
         id="mobile-menu"
       >
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-md">
@@ -224,12 +309,56 @@ export default function Header() {
 
           {user ? (
             <>
-              <span className="block px-3 py-2 text-base font-medium text-blue-800">Hola {user.name}</span>
+              <div className="border-t border-gray-300 pt-2 mt-2">
+                <p className="px-3 py-1 text-sm font-medium text-blue-800">
+                  Perfil de {user.name}
+                </p>
+                <NavLink
+                  to="/perfil"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Mi Perfil
+                  </div>
+                </NavLink>                <NavLink
+                  to="/cambiar-password"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    Cambiar Contraseña
+                  </div>
+                </NavLink>
+                <NavLink
+                  to="/favoritos"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    Mis Rutas Favoritas
+                  </div>
+                </NavLink>
+              </div>
               <button
                 onClick={handleLogout}
                 className="block w-full text-left px-3 py-2 rounded-md text-base font-medium bg-red-600 text-white hover:bg-red-700 mt-2"
               >
-                Cerrar sesión
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Cerrar sesión
+                </div>
               </button>
             </>
           ) : (

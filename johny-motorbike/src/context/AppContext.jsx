@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react'
+import { createContext, useState, useEffect, useContext, useCallback } from 'react'
 import axios from 'axios'
 
 // URL base de la API
@@ -22,6 +22,9 @@ export const AppProvider = ({ children }) => {
   const [roles, setRoles] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  // Estado para las rutas favoritas
+  const [favoriteRoutes, setFavoriteRoutes] = useState([])
+  const [loadingFavorites, setLoadingFavorites] = useState(false)
 
   // --- AUTENTICACIÓN ---
   const [user, setUser] = useState(() => {
@@ -170,6 +173,100 @@ export const AppProvider = ({ children }) => {
     }
   }
 
+  // Actualizar datos del perfil del usuario
+  const updateProfile = async (userId, data) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      // Asegurar que tenemos el token de autenticación
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setAuthError('No estás autenticado');
+        return false;
+      }
+
+      // Llamar a la API para actualizar los datos del usuario
+      const res = await axios.put(
+        `${API_URL}/user/${userId}`,
+        data,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (res.data && res.data.success) {
+        // Actualizar el usuario en el estado y localStorage
+        const updatedUser = { ...user, ...data };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        return true;
+      } else {
+        setAuthError('Error al actualizar el perfil');
+        return false;
+      }
+    } catch (err) {
+      console.error('Error al actualizar perfil:', err);
+      setAuthError(
+        err.response?.data?.message || 
+        'Error al actualizar el perfil. Verifica tus datos.'
+      );
+      return false;
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Cambiar contraseña (estando autenticado)
+  const changePassword = async (current_password, password, password_confirmation) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      // Asegurar que tenemos el token de autenticación
+      const token = localStorage.getItem('token');
+      if (!token || !user) {
+        setAuthError('No estás autenticado');
+        return false;
+      }
+
+      // Llamar a la API para cambiar la contraseña
+      const res = await axios.put(
+        `${API_URL}/user/${user.id}/change-password`,
+        {
+          current_password,
+          password,
+          password_confirmation
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (res.data && res.data.success) {
+        return true;
+      } else {
+        setAuthError('Error al cambiar la contraseña');
+        return false;
+      }
+    } catch (err) {
+      console.error('Error al cambiar contraseña:', err);
+      setAuthError(
+        err.response?.data?.message || 
+        'Error al cambiar la contraseña. Verifica que la contraseña actual sea correcta.'
+      );
+      return false;
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   // Logout
   const logout = () => {
     setUser(null)
@@ -186,6 +283,111 @@ export const AppProvider = ({ children }) => {
       // Opcional: podrías validar el token con un endpoint /me
     }
   }, [])
+
+  // --- FAVORITOS ---
+  // Verificar si una ruta es favorita
+  const checkFavorite = async (routeId) => {
+    if (!user) return false;
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return false;
+
+      const res = await axios.get(`${API_URL}/routes/${routeId}/favorite`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      return res.data.is_favorite;
+    } catch (err) {
+      console.error('Error al verificar favorito:', err);
+      return false;
+    }
+  };
+
+  // Alternar una ruta como favorita (añadir/quitar)
+  const toggleFavorite = async (routeId) => {
+    if (!user) return false;
+    
+    try {
+      setLoadingFavorites(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        return false;
+      }
+
+      const res = await axios.post(`${API_URL}/routes/${routeId}/favorite`, {}, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.data.success) {
+        // Si se quitó de favoritos, actualiza la lista de favoritos
+        if (!res.data.is_favorite) {
+          setFavoriteRoutes(prevFavorites => prevFavorites.filter(route => route.id !== parseInt(routeId)));
+        } else {
+          // Si se agregó a favoritos, recarga los favoritos
+          loadFavoriteRoutes();
+        }
+        return res.data.is_favorite;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error al cambiar favorito:', err);
+      return false;
+    } finally {
+      setLoadingFavorites(false);
+    }
+  };  // Cargar las rutas favoritas del usuario
+  // Usamos useCallback para evitar que la función se recree en cada renderización
+  const loadFavoriteRoutes = useCallback(async () => {
+    if (!user) {
+      setFavoriteRoutes([]);
+      return;
+    }
+    
+    try {
+      setLoadingFavorites(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setFavoriteRoutes([]);
+        return;
+      }
+      
+      // Usar la ruta específica sin necesidad de depuración
+      const res = await axios.get(`${API_URL}/user-favorite-routes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+        
+      if (res.data.success) {
+        setFavoriteRoutes(res.data.data);
+      } else {
+        setFavoriteRoutes([]);
+      }
+    } catch (err) {
+      console.error('Error al cargar rutas favoritas:', err);
+      setFavoriteRoutes([]);
+    } finally {
+      setLoadingFavorites(false);
+    }
+  }, [user]); // Solo se recrea cuando user cambia
+
+  // Efecto para cargar las rutas favoritas cuando el usuario inicia sesión
+  useEffect(() => {
+    if (user) {
+      loadFavoriteRoutes();
+    } else {
+      setFavoriteRoutes([]);
+    }
+  }, [user]);
 
   // Función para cargar todos los datos iniciales
   const loadInitialData = async () => {
@@ -297,9 +499,16 @@ export const AppProvider = ({ children }) => {
     authLoading,
     login,
     register,
-    sendPasswordResetLink, // Nueva función
-    resetPassword,         // Nueva función
+    sendPasswordResetLink,
+    resetPassword,
+    updateProfile,
+    changePassword,
     logout,
+    favoriteRoutes,
+    loadingFavorites,
+    checkFavorite,
+    toggleFavorite,
+    loadFavoriteRoutes
   }
 
   return (

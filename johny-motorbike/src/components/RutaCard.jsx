@@ -15,6 +15,27 @@ const RutaCard = ({ ruta, className = '' }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  // Estados para manejar el modal de login
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  
+  // Maneja la animación de entrada y salida del modal
+  const openModal = () => {
+    setShowLoginModal(true);
+    setIsClosing(false);
+    setTimeout(() => setModalVisible(true), 10); // Espera para activar la animación de entrada
+  };
+  
+  const closeModal = () => {
+    setIsClosing(true);
+    setModalVisible(false);
+    setTimeout(() => {
+      setShowLoginModal(false);
+      setIsClosing(false);
+    }, 300);
+  };
+  
   // Verificar si la ruta es favorita al cargar el componente - versión altamente optimizada
   useEffect(() => {
     let isMounted = true; // Bandera para evitar actualizar el estado si el componente se desmonta
@@ -46,15 +67,14 @@ const RutaCard = ({ ruta, className = '' }) => {
     };
   }, [user, ruta?.id, checkFavorite, favoriteRouteIds]);
     // Estado para manejar la animación del corazón
-  const [heartKey, setHeartKey] = useState(0); // Clave para forzar una nueva animación
-  // Función para manejar el clic en el botón de favorito - versión optimizada
+  const [heartKey, setHeartKey] = useState(0); // Clave para forzar una nueva animación  // Función para manejar el clic en el botón de favorito - versión optimizada
   const handleToggleFavorite = async (e) => {
     e.preventDefault(); // Evitar que el enlace de la tarjeta se active
     e.stopPropagation();
     
-    // Si el usuario no está logueado, redirigir al login
+    // Si el usuario no está logueado, mostramos el modal de login
     if (!user) {
-      navigate('/login');
+      openModal();
       return;
     }
     
@@ -224,8 +244,54 @@ const RutaCard = ({ ruta, className = '' }) => {
           .animate-heartbeat {
             animation: heartbeat 0.5s ease-in-out;
           }
+          
+          @keyframes modalOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+          }
+          .animate-modal-out {
+            animation: modalOut 0.2s ease-out forwards;
+          }
         `
       }} />
+      
+      {/* Modal de inicio de sesión */}
+      {showLoginModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className={`fixed inset-0 bg-black transition-opacity duration-300 ${modalVisible ? 'opacity-50' : 'opacity-0'}`}></div>
+          <div className={`bg-white rounded-lg shadow-xl overflow-hidden w-11/12 max-w-md mx-auto transform transition-all duration-300 ${modalVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${isClosing ? 'animate-modal-out' : ''}`}>
+            <div className="relative p-6">
+              <button 
+                onClick={closeModal} 
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Necesitas iniciar sesión</h3>
+              <p className="text-gray-600 mb-6">
+                Para añadir rutas a favoritos necesitas iniciar sesión con tu cuenta. 
+                Si aún no tienes una cuenta, puedes registrarte.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+                >
+                  Iniciar sesión
+                </button>
+                <button
+                  onClick={() => navigate('/register')}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded transition-colors"
+                >
+                  Registrarse
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

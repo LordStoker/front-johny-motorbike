@@ -340,47 +340,35 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
       {/* Formulario para añadir comentario */}
       <div className="mb-8 bg-gray-50 rounded-lg p-6 border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Deja un comentario</h3>
-        {user ? (
-          <form onSubmit={handleSubmitComment}>
-            <div className="mb-4">
-              <div className="flex items-center mb-2">
-                <label className="block text-gray-700 mr-3">Tu valoración:</label>
-                <RatingStars score={rating} interactive={true} onChange={setRating} />
-              </div>
-              <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-                rows="3"
-                placeholder="Escribe tu comentario..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                required
-              ></textarea>
+        <form onSubmit={handleSubmitComment}>
+          <div className="mb-4">
+            <div className="flex items-center mb-2">
+              <label className="block text-gray-700 mr-3">Tu valoración:</label>
+              <RatingStars score={rating} interactive={true} onChange={setRating} />
             </div>
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={isSubmittingComment || !newComment.trim()}
-                className={`${
-                  isSubmittingComment || !newComment.trim()
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-700 hover:bg-blue-800'
-                } text-white px-4 py-2 rounded-md transition duration-300`}
-              >
-                {isSubmittingComment ? 'Enviando...' : 'Comentar'}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="flex flex-col items-end gap-2">
+            <textarea
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+              rows="3"
+              placeholder={user ? "Escribe tu comentario..." : "Escribe tu comentario (necesitarás iniciar sesión para publicarlo)"}
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              required
+            ></textarea>
+          </div>
+          <div className="flex justify-end">
             <button
-              type="button"
-              className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md transition duration-300"
-              onClick={openModal}
+              type="submit"
+              disabled={isSubmittingComment || !newComment.trim()}
+              className={`${
+                isSubmittingComment || !newComment.trim()
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-700 hover:bg-blue-800'
+              } text-white px-4 py-2 rounded-md transition duration-300`}
             >
-              Comentar
+              {isSubmittingComment ? 'Enviando...' : 'Enviar comentario'}
             </button>
           </div>
-        )}
+        </form>
       </div>
         {/* Lista de comentarios */}
       <div className="space-y-6">      {!isApiAvailable ? (

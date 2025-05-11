@@ -44,7 +44,7 @@ const RutaDetail = ({ ruta: initialRoute }) => {
     
     setIsRefreshing(true);
     try {
-      // Usamos la ruta correcta: /route/{id} en lugar de /routes/{id}
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/route/${routeId}`);
       if (!response.ok) {
         throw new Error('Error al obtener los detalles de la ruta');
@@ -370,6 +370,57 @@ const RutaDetail = ({ ruta: initialRoute }) => {
           `
         }} />
       </div>
+      
+      {/* Modal de inicio de sesión */}
+      {showLoginModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className={`fixed inset-0 bg-black transition-opacity duration-300 ${modalVisible ? 'opacity-50' : 'opacity-0'}`}></div>
+          <div className={`bg-white rounded-lg shadow-xl overflow-hidden w-11/12 max-w-md mx-auto transform transition-all duration-300 ${modalVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${isClosing ? 'animate-modal-out' : ''}`}>
+            <div className="relative p-6">
+              <button 
+                onClick={closeModal} 
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Necesitas iniciar sesión</h3>
+              <p className="text-gray-600 mb-6">
+                Para añadir rutas a favoritos necesitas iniciar sesión con tu cuenta. 
+                Si aún no tienes una cuenta, puedes registrarte.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+                >
+                  Iniciar sesión
+                </button>
+                <button
+                  onClick={() => navigate('/register')}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded transition-colors"
+                >
+                  Registrarse
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Animación para el modal */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes modalOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+          }
+          .animate-modal-out {
+            animation: modalOut 0.2s ease-out forwards;
+          }
+        `
+      }} />
     </div>
   );
 };

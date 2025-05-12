@@ -170,15 +170,21 @@ const RutaCard = ({ ruta, className = '' }) => {
         <p className="text-gray-700 mb-3 line-clamp-2">
           {ruta.description}
         </p>
-        
-        {/* Metadatos de la ruta */}
-        <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
+          {/* Metadatos de la ruta */}
+        <div className="flex flex-wrap justify-between items-center text-sm text-gray-600 mb-3 gap-2">
           <div className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             <span>{ruta.distance} km</span>
+          </div>
+          
+          <div className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{ruta.duration} min</span>
           </div>
           
           <span className={`px-2 py-1 rounded-full ${

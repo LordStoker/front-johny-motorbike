@@ -1,0 +1,61 @@
+/* Estilos personalizados para mejorar la apariencia de las banderas en el select */
+
+/* Estilos para el contenedor del select */
+.country-select-container {
+  position: relative;
+}
+
+/* Estilo para el select con banderas */
+.country-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-left: 2.5rem !important;
+  background-color: #fff;
+}
+
+/* Estilo para la bandera seleccionada */
+.flag-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 12px;
+  object-fit: contain;
+  border-radius: 2px;
+  box-shadow: 0 0 1px rgba(0,0,0,0.2);
+}
+
+/* Estilos para el dropdown en portal */
+.country-dropdown-portal {
+  z-index: 9999;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  max-height: 300px;
+}
+
+/* Solución específica para Firefox */
+@-moz-document url-prefix() {
+  .country-select option {
+    padding-left: 30px !important;
+    background-position: 8px center;
+    background-repeat: no-repeat;
+    background-size: 16px 12px;
+  }
+}
+
+/* Solución específica para Chrome */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  .country-select option {
+    padding-left: 30px !important;
+  }
+}
+
+/* Solución para Safari */
+@media not all and (min-resolution:.001dpcm) {
+  @supports (-webkit-appearance:none) {
+    .country-select {
+      text-indent: 0;
+    }
+  }
+}

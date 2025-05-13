@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import defaultRouteImage from '../assets/default-route-image.jpg'
 import { useAppContext } from '../context/AppContext'
 import StarRating from './StarRating'
+import RouteIcon from './RouteIcons'
 
 /**
  * Componente para mostrar una tarjeta de ruta
@@ -179,21 +180,25 @@ const RutaCard = ({ ruta, className = '' }) => {
             </svg>
             <span>{ruta.distance} km</span>
           </div>
-          
-          <div className="flex items-center">
+            <div className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>{ruta.duration} min</span>
+            <span>{Math.floor(ruta.duration)} min</span>
           </div>
-          
-          <span className={`px-2 py-1 rounded-full ${
+            <span className={`px-2 py-1 rounded-full flex items-center ${
             ruta.difficulty?.name === 'Fácil' ? 'bg-green-100 text-green-800' :
             ruta.difficulty?.name === 'Moderada' ? 'bg-yellow-100 text-yellow-800' :
             ruta.difficulty?.name === 'Difícil' ? 'bg-red-100 text-red-800' :
             'bg-purple-100 text-purple-800'
           }`}>
-            {ruta.difficulty?.name || 'No especificada'}
+            <RouteIcon 
+              type="difficulty"
+              name={ruta.difficulty?.name || 'No especificada'}
+              size="sm"
+              className="mr-1"
+            />
+            <span>{ruta.difficulty?.name || 'No especificada'}</span>
           </span>
         </div>
         
@@ -212,19 +217,20 @@ const RutaCard = ({ ruta, className = '' }) => {
             showValue={true}
             className="hover:opacity-80 transition-opacity"
           />
-        </div>
-        
-        {/* Etiquetas de terreno y paisaje */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {ruta.terrain && (
-            <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
-              {ruta.terrain.name}
-            </span>
+        </div>        {/* Iconos de terreno y paisaje */}
+        <div className="flex flex-wrap gap-3 mb-4">          {ruta.terrain && (
+            <RouteIcon 
+              type="terrain"
+              name={ruta.terrain.name}
+              size="md"
+            />
           )}
           {ruta.landscape && (
-            <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
-              {ruta.landscape.name}
-            </span>
+            <RouteIcon 
+              type="landscape"
+              name={ruta.landscape.name}
+              size="md"
+            />
           )}
         </div>
         

@@ -1,0 +1,64 @@
+/* Estilos para los iconos circulares */
+.icon-button {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Estilos para aumentar el tamaño de los iconos SVG */
+.icon-button svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.icon-button::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  white-space: nowrap;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.2s, bottom 0.2s;
+  pointer-events: none;
+}
+
+.icon-button:hover::after {
+  opacity: 1;
+  bottom: -18px;
+}
+
+/* Animación al seleccionar */
+.icon-button.selected {
+  animation: pulse 0.3s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Efecto de onda al hacer clic */
+.icon-button:active::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 100%;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  animation: wave 0.6s ease-out;
+}
+
+@keyframes wave {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(20); opacity: 0; }
+}

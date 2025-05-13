@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AppContext';
 import defaultRouteImage from '../assets/default-route-image.jpg';
 import RouteComments from './RouteComments';
 import StarRating from './StarRating';
+import RouteIcon from './RouteIcons';
 
 /**
  * Componente que muestra los detalles de una ruta específica
@@ -231,11 +232,10 @@ const RutaDetail = ({ ruta: initialRoute }) => {
               <span>{rutaData.distance} km</span>
             </div>
             
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center">              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>{rutaData.duration} minutos</span>
+              <span>{Math.floor(rutaData.duration)} minutos</span>
             </div>
             
             <div className="flex items-center">
@@ -265,31 +265,46 @@ const RutaDetail = ({ ruta: initialRoute }) => {
                 {rutaData.comments_count === 1 ? ' comentario' : ' comentarios'}
               </span>
             </div>
-            
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              <div className={`px-3 py-1 rounded-full text-sm font-medium flex items-center ${
               rutaData.difficulty?.name === 'Fácil' ? 'bg-green-100 text-green-800' :
               rutaData.difficulty?.name === 'Moderada' ? 'bg-yellow-100 text-yellow-800' :
               rutaData.difficulty?.name === 'Difícil' ? 'bg-red-100 text-red-800' :
               'bg-purple-100 text-purple-800'
             }`}>
-              {rutaData.difficulty?.name || 'No especificada'}
+              <RouteIcon 
+                type="difficulty"
+                name={rutaData.difficulty?.name || 'No especificada'}
+                size="sm"
+                className="mr-2"
+              />
+              <span>{rutaData.difficulty?.name || 'No especificada'}</span>
             </div>
-          </div>
-          
-          {/* Etiquetas */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {rutaData.terrain && (
-              <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                {rutaData.terrain.name}
-              </span>
+          </div>          {/* Etiquetas */}
+          <div className="flex flex-wrap gap-6 mb-6">            {rutaData.terrain && (
+              <RouteIcon 
+                type="terrain"
+                name={rutaData.terrain.name}
+                size="lg"
+                showLabel={true}
+                labelBelow={true}
+                className="px-1"
+              />
             )}
             {rutaData.landscape && (
-              <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                {rutaData.landscape.name}
-              </span>
+              <RouteIcon 
+                type="landscape"
+                name={rutaData.landscape.name}
+                size="lg"
+                showLabel={true}
+                labelBelow={true}
+                className="px-1"
+              />
             )}
             {rutaData.country && (
-              <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+              <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                </svg>
                 {rutaData.country.name}
               </span>
             )}

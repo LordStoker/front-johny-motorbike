@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 /**
  * Componente para filtrar por valoración con estrellas
@@ -17,13 +17,27 @@ const RatingStarsFilter = ({ rating = 0, onChange }) => {
           <button
             key={value}
             onClick={() => onChange(value)}
-            className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
+            className={`w-auto h-8 px-3 flex items-center justify-center rounded-full transition-all ${
               rating === value
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
             }`}
           >
-            {value === 0 ? 'Todos' : value}
+            {value === 0 ? (
+              'Todos'
+            ) : (
+              <div className="flex items-center">
+                <span>{value}</span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="w-4 h-4 ml-1" 
+                  fill="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/>
+                </svg>
+              </div>
+            )}
           </button>
         ))}
       </div>

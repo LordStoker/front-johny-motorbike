@@ -3,11 +3,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAppContext } from '../context/AppContext'
 import RutaCard from '../components/RutaCard'
 import FilterBar from '../components/FilterBar'
+import RouteIcon, { landscapeIcons, terrainIcons, difficultyIcons } from '../components/RouteIcons'
+
 
 export default function Rutas() {
-  const { routes, loading, error, user, loadFavoriteRouteIds } = useAppContext()
+  const { routes, landscapes, difficulties, terrains, countries, loading, error, user, loadFavoriteRouteIds } = useAppContext()
   const [filteredRoutes, setFilteredRoutes] = useState([])  // Constantes para los valores máximos de filtros
-  const MAX_DISTANCE = 500; // 500+ km (filtro abierto)
+  const MAX_DISTANCE = 999; // 500+ km (filtro abierto)
   const MAX_DURATION = 480; // 480+ minutos (8 horas) (filtro abierto)
   
   const [activeFilters, setActiveFilters] = useState({
@@ -177,34 +179,86 @@ export default function Rutas() {
         <p className="text-gray-600">
           Mostrando <span className="font-semibold">{filteredRoutes.length}</span> de <span className="font-semibold">{routes.length}</span> rutas
         </p>
-        
-        {/* Mostrar resumen de los filtros activos */}
-        <div className="flex flex-wrap gap-2">
-          {activeFilters.landscapes.length > 0 && (
-            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-              {activeFilters.landscapes.length} paisajes
-            </span>
-          )}
-          {activeFilters.difficulties.length > 0 && (
-            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-              {activeFilters.difficulties.length} dificultades
-            </span>
-          )}
-          {activeFilters.terrains.length > 0 && (
-            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-              {activeFilters.terrains.length} terrenos
-            </span>
+          {/* Mostrar resumen de los filtros activos */}
+        <div className="flex flex-wrap gap-2">          {activeFilters.landscapes.length > 0 && (
+            <div className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full flex items-center">
+              <span className="mr-1">Paisajes:</span>
+              <div className="flex gap-1">
+                {activeFilters.landscapes.map(landscapeId => {
+                  const landscape = landscapes.find(l => l.id === landscapeId);
+                  return landscape ? (
+                    <span key={landscapeId} className="flex items-center" title={landscape.name}>
+                      <RouteIcon 
+                        type="landscape"
+                        name={landscape.name}
+                        size="sm"
+                        className="mr-1"
+                      />
+                      <span>{landscape.name}</span>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          )}{activeFilters.difficulties.length > 0 && (
+            <div className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full flex items-center">
+              <span className="mr-1">Dificultades:</span>
+              <div className="flex gap-2">
+                {activeFilters.difficulties.map(difficultyId => {
+                  const difficulty = difficulties.find(d => d.id === difficultyId);
+                  return difficulty ? (
+                    <span key={difficultyId} className="flex items-center">
+                      <RouteIcon 
+                        type="difficulty"
+                        name={difficulty.name}
+                        size="sm"
+                        className="mr-1"
+                      />
+                      <span>{difficulty.name}</span>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          )}          {activeFilters.terrains.length > 0 && (
+            <div className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full flex items-center">
+              <span className="mr-1">Terrenos:</span>
+              <div className="flex gap-1">
+                {activeFilters.terrains.map(terrainId => {
+                  const terrain = terrains.find(t => t.id === terrainId);
+                  return terrain ? (
+                    <span key={terrainId} className="flex items-center" title={terrain.name}>
+                      <RouteIcon 
+                        type="terrain"
+                        name={terrain.name}
+                        size="sm"
+                        className="mr-1"
+                      />
+                      <span>{terrain.name}</span>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            </div>
           )}
           {activeFilters.countries.length > 0 && (
-            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-              {activeFilters.countries.length} países
-            </span>
+            <div className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full flex items-center">
+              <span className="mr-1">Países:</span>
+              <div className="flex gap-1">
+                {activeFilters.countries.map(countryId => {
+                  const country = countries.find(c => c.id === countryId);
+                  return country ? (
+                    <span key={countryId}>{country.name}</span>
+                  ) : null;
+                })}
+              </div>
+            </div>
           )}
           {activeFilters.rating > 0 && (
-            <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center">
-              {activeFilters.rating}+ estrellas
-              <svg className="w-3 h-3 ml-1 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            <span className="bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full flex items-center">
+              <span className="mr-1">{activeFilters.rating}+</span>
+              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/>
               </svg>
             </span>
           )}

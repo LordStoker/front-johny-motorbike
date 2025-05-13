@@ -4,6 +4,7 @@ import RangeSlider from './RangeSlider';
 import RatingStarsFilter from './RatingStarsFilter';
 import CountrySelect from './CountrySelect';
 import IconSelector from './IconSelector';
+import { difficultyIcons } from './RouteIcons';
 
 /**
  * Componente para filtrar y buscar rutas
@@ -13,7 +14,7 @@ import IconSelector from './IconSelector';
 const FilterBar = ({ onFilterChange }) => {
   const { landscapes, terrains, difficulties, countries } = useAppContext();
     // Constantes para valores máximos
-  const MAX_DISTANCE = 500; // 500+ km (filtro abierto)
+  const MAX_DISTANCE = 999; // 500+ km (filtro abierto)
   const MAX_DURATION = 480; // 480+ minutos (8 horas) (filtro abierto)
   
   // Estados para cada tipo de filtro
@@ -79,45 +80,73 @@ const FilterBar = ({ onFilterChange }) => {
     }
   };
   // Utilizamos el componente RangeSlider importado en lugar de definirlo aquí
-
-  // Componente para filtros de selección múltiple
+  // Componente para filtros de selección múltiple con iconos
   const MultiSelect = ({ title, items, selectedItems, toggleItem }) => {
+    // Usar difficultyIcons para el título "Dificultad"
+    const usesIcons = title === 'Dificultad';
+    const icons = usesIcons ? difficultyIcons : null;
+
     return (
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">{title}</label>
-        <div className="flex flex-wrap gap-2">
-          {items && items.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => toggleItem(item.id, selectedItems, (newSelected) => {
-                switch (title) {
-                  case 'Paisaje':
-                    setSelectedLandscapes(newSelected);
-                    break;
-                  case 'Dificultad':
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-3">{title}</label>
+        <div className="flex flex-wrap gap-4">
+          {items && items.map((item) => {
+            // Obtener el icono si estamos usando iconos
+            const Icon = usesIcons && icons[item.name] ? icons[item.name] : null;
+            
+            return usesIcons ? (
+              // Versión con iconos (estilo similar a IconSelector)
+              <div key={item.id} className="flex flex-col items-center mb-2">
+                <button
+                  onClick={() => toggleItem(item.id, selectedItems, (newSelected) => {
                     setSelectedDifficulties(newSelected);
-                    break;
-                  case 'Terreno':
-                    setSelectedTerrains(newSelected);
-                    break;
-                  case 'País':
-                    setSelectedCountries(newSelected);
-                    break;
-                }
-              })}
-              className={`text-xs px-3 py-1 rounded-full transition-all ${
-                selectedItems.includes(item.id)
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-              }`}
-            >
-              {item.name}
-            </button>
-          ))}
+                  })}
+                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-all transform hover:scale-110 icon-button ${
+                    selectedItems.includes(item.id)
+                    ? 'bg-blue-600 text-white shadow-md selected'
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                  }`}
+                  data-name={item.name}
+                  title={item.name}
+                >
+                  <span className="text-2xl">{Icon}</span>
+                </button>
+                <span className="text-xs mt-1 text-gray-600 text-center">{item.name}</span>
+              </div>
+            ) : (
+              // Versión normal con texto para otros tipos
+              <button
+                key={item.id}
+                onClick={() => toggleItem(item.id, selectedItems, (newSelected) => {
+                  switch (title) {
+                    case 'Paisaje':
+                      setSelectedLandscapes(newSelected);
+                      break;
+                    case 'Dificultad':
+                      setSelectedDifficulties(newSelected);
+                      break;
+                    case 'Terreno':
+                      setSelectedTerrains(newSelected);
+                      break;
+                    case 'País':
+                      setSelectedCountries(newSelected);
+                      break;
+                  }
+                })}
+                className={`text-xs px-3 py-1 rounded-full transition-all ${
+                  selectedItems.includes(item.id)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                {item.name}
+              </button>
+            );
+          })}
         </div>
       </div>
     );
-  };  // Ya no necesitamos definir RatingFilter aquí ya que usamos el componente importado
+  };// Ya no necesitamos definir RatingFilter aquí ya que usamos el componente importado
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -199,7 +228,8 @@ const FilterBar = ({ onFilterChange }) => {
             />
           </div>
 
-          <div>            <IconSelector
+          <div>
+              <IconSelector
               title="Paisaje"
               items={landscapes}
               selectedItems={selectedLandscapes}

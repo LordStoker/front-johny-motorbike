@@ -48,7 +48,7 @@ const buildApiUrl = (endpoint, params = {}) => {
   // Si la base URL no incluye /api y no estamos accediendo a una ruta de autenticación, añadirlo
   if (!baseUrl.includes('/api') && !endpoint.startsWith('login') && !endpoint.startsWith('register')) {
     baseUrl = `${baseUrl}/api`;
-    console.log('Añadiendo /api a la URL base:', baseUrl);
+    
   }
   
   // Eliminar barras finales para formar URLs correctamente
@@ -206,11 +206,11 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
       const url = buildApiUrl('comment');
       
       
-      console.log('Datos del comentario:', {
-        comment: newComment,
-        score: rating,
-        route_id: ruta.id
-      });
+      // console.log('Datos del comentario:', {
+      //   comment: newComment,
+      //   score: rating,
+      //   route_id: ruta.id
+      // });
       
       const response = await fetch(url, {
         method: 'POST',
@@ -260,7 +260,57 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
       setIsSubmittingComment(false);
     }
   };
-  
+    // Función para eliminar un comentario
+  const deleteComment = async (commentId) => {
+    if (!user) {
+      openModal();
+      return;
+    }
+    
+    try {
+      // Asegurarse de que la URL se construya correctamente
+      const apiUrl = buildApiUrl(`comment/${commentId}`);
+      
+      
+      // Obtener el token desde localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No hay token de autenticación disponible');
+      }
+
+      // Realizar la solicitud DELETE con el token correcto
+      const response = await fetch(apiUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      // Verificar el estado de la respuesta antes de intentar procesar el cuerpo
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error ${response.status}: ${errorText}`);
+        throw new Error(`Error al eliminar comentario: ${response.statusText}`);
+      }
+      
+      
+      
+      // Filtrar el comentario eliminado de la lista local
+      setComments(comments.filter(comment => comment.id !== commentId));
+      
+      // Notificar que se ha eliminado un comentario
+      if (onCommentAdded && typeof onCommentAdded === 'function') {
+        onCommentAdded();
+      }
+    } catch (error) {
+      console.error('Error al eliminar comentario:', error);
+      // Mostrar un mensaje de error al usuario
+      alert('No se pudo eliminar el comentario. Por favor, inténtalo de nuevo más tarde.');
+    }
+  };
+
   // Configurar el observador para infinite scroll
   useEffect(() => {
     if (!observerTarget.current || !hasMoreComments) return;
@@ -409,23 +459,39 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
           <>
             {comments.map((comment) => (
               <div key={comment.id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                <div className="flex items-start">
-                  <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-xl font-semibold text-white">
-                    {comment.user?.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <div className="ml-4">
-                    <div className="flex items-center">
-                      <h4 className="font-medium text-gray-800">
-                        {comment.user?.name || 'Usuario anónimo'}
-                      </h4>
-                      <span className="mx-2 text-gray-400">•</span>
-                      <span className="text-sm text-gray-500">
-                        {formatDate(comment.created_at)}
-                      </span>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start flex-grow">
+                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-xl font-semibold text-white">
+                      {comment.user?.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
-                    <RatingStars score={comment.score} />
-                    <p className="mt-1 text-gray-600">{comment.comment}</p>
+                    <div className="ml-4">
+                      <div className="flex items-center">
+                        <h4 className="font-medium text-gray-800">
+                          {comment.user?.name || 'Usuario anónimo'}
+                        </h4>
+                        <span className="mx-2 text-gray-400">•</span>
+                        <span className="text-sm text-gray-500">
+                          {formatDate(comment.created_at)}
+                        </span>
+                      </div>
+                      <RatingStars score={comment.score} />
+                      <p className="mt-1 text-gray-600">{comment.comment}</p>
+                    </div>
                   </div>
+
+                  {/* Botón para eliminar con ícono X */}
+                  {user && user.id === comment.user_id && (
+                    <button
+                      onClick={() => deleteComment(comment.id)}
+                      className="p-1.5 rounded-full text-gray-400 hover:text-red-600 hover:bg-gray-100 transition-colors"
+                      title="Eliminar comentario"
+                      aria-label="Eliminar comentario"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

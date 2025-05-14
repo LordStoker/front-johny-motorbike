@@ -5,7 +5,7 @@ import { LuBaby } from "react-icons/lu";
 import { FaHillRockslide } from "react-icons/fa6";
 import { AiFillThunderbolt } from "react-icons/ai";
 import { BiSolidHot, BiSolidCool } from "react-icons/bi";
-import { FaQuestion } from "react-icons/fa";
+
 
 /**
  * Mapeo de iconos para tipos de dificultades

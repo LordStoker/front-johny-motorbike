@@ -279,6 +279,16 @@ const RutaDetail = ({ ruta: initialRoute }) => {
               />
               <span>{rutaData.difficulty?.name || 'No especificada'}</span>
             </div>
+            
+            {/* País a continuación de la dificultad */}
+            {rutaData.country && (
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                </svg>
+                <span>{typeof rutaData.country === 'object' ? rutaData.country.name : rutaData.country}</span>
+              </div>
+            )}
           </div>          {/* Etiquetas */}
           <div className="flex flex-wrap gap-6 mb-6">            {rutaData.terrain && (
               <RouteIcon 
@@ -289,8 +299,7 @@ const RutaDetail = ({ ruta: initialRoute }) => {
                 labelBelow={true}
                 className="px-1"
               />
-            )}
-            {rutaData.landscape && (
+            )}            {rutaData.landscape && (
               <RouteIcon 
                 type="landscape"
                 name={rutaData.landscape.name}
@@ -299,14 +308,6 @@ const RutaDetail = ({ ruta: initialRoute }) => {
                 labelBelow={true}
                 className="px-1"
               />
-            )}
-            {rutaData.country && (
-              <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm font-medium flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-                </svg>
-                {rutaData.country.name}
-              </span>
             )}
           </div>
           

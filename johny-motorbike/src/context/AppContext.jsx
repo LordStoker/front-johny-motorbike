@@ -285,7 +285,7 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
     const token = localStorage.getItem('token')
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      // Opcional: podrías validar el token con un endpoint /me
+      
     }
   }, [])
   // --- FAVORITOS ---
@@ -390,7 +390,7 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
     }
   }, [user, favoriteRouteIds, favoriteRoutes, loadFavoriteRouteIds]);
   
-  // Alternar una ruta como favorita (añadir/quitar)- versión optimizada para cambios visuales inmediatos
+  // Alternar una ruta como favorita (añadir/quitar)
   const toggleFavorite = async (routeId) => {
     if (!user) return false;
     

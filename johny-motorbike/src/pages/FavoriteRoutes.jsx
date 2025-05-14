@@ -44,8 +44,6 @@ export default function FavoriteRoutes() {
         });
       }
     }
-    // loadFavoriteRoutes se eliminó de las dependencias para evitar bucles infinitos
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
   
   // Efecto para animar las tarjetas cuando cambia la lista de favoritos

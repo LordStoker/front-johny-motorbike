@@ -7,8 +7,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [useTestMode, setUseTestMode] = useState(false); // Para usar el endpoint de prueba
-
+  
   const validateForm = () => {
     const errors = {};
     if (!email) {
@@ -18,11 +17,12 @@ export default function ForgotPassword() {
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
-  };  const handleSubmit = async (e) => {
+  }; 
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
       try {
-        const success = await sendPasswordResetLink(email, useTestMode);
+        const success = await sendPasswordResetLink(email);
         if (success) {
           setSubmitSuccess(true);
         }
@@ -92,22 +92,7 @@ export default function ForgotPassword() {
                 </Link>
               </div>
               
-              {/* Opción de modo de prueba - solo visible en desarrollo */}
-              {import.meta.env.DEV && (
-                <div className="flex items-center">
-                  <input
-                    id="test-mode"
-                    name="test-mode"
-                    type="checkbox"
-                    checked={useTestMode}
-                    onChange={() => setUseTestMode(prev => !prev)}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  />
-                  <label htmlFor="test-mode" className="ml-2 text-sm text-blue-600">
-                    Modo prueba
-                  </label>
-                </div>
-              )}
+
             </div><button
               type="submit"
               disabled={authLoading}

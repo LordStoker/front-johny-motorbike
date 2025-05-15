@@ -336,11 +336,12 @@ const RutaCard = ({ ruta, className = '' }) => {
   if (!ruta) {
     return null;
   }
-  
-  // Imagen de la ruta o imagen por defecto
-  const routeImage = ruta.route_images && ruta.route_images[0]
-    ? `${import.meta.env.VITE_API_URL}/storage/${ruta.route_images[0].url}`
-    : defaultRouteImage;
+    // Imagen de la ruta o imagen por defecto
+  const routeImage = ruta.image
+    ? (ruta.image.startsWith('data:') ? ruta.image : `${import.meta.env.VITE_API_URL}/storage/${ruta.image}`)
+    : (ruta.route_images && ruta.route_images[0]
+      ? `${import.meta.env.VITE_API_URL}/storage/${ruta.route_images[0].url}`
+      : defaultRouteImage);
   
   return (
     <div className={`bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col ${className}`}>

@@ -5,6 +5,7 @@ import defaultRouteImage from '../assets/default-route-image.jpg';
 import RouteComments from './RouteComments';
 import StarRating from './StarRating';
 import RouteIcon from './RouteIcons';
+import RouteMap from './RouteMap';
 
 // Mapa de códigos de país para mostrar banderas
 const countryFlags = {
@@ -371,25 +372,19 @@ const RutaDetail = ({ ruta: initialRoute }) => {
       </div>
     );
   }
-  
-  // Extraer primera imagen o usar imagen por defecto
-  const mainImage = rutaData.route_images && rutaData.route_images[0] 
-    ? `${import.meta.env.VITE_API_URL}/storage/${rutaData.route_images[0].url}`
-    : defaultRouteImage;
-  
-  return (
+    // Extraer imagen (prioridad: imagen capturada del mapa > imágenes de galería > imagen por defecto)
+  const mainImage = rutaData.image
+    ? (rutaData.image.startsWith('data:') ? rutaData.image : `${import.meta.env.VITE_API_URL}/storage/${rutaData.image}`)
+    : (rutaData.route_images && rutaData.route_images[0]
+      ? `${import.meta.env.VITE_API_URL}/storage/${rutaData.route_images[0].url}`
+      : defaultRouteImage);
+    return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        {/* Cabecera con imagen principal y título */}
-        <div className="relative">
-          <div className="w-full h-64 sm:h-96 overflow-hidden">
-            <img 
-              src={mainImage}
-              alt={rutaData.name} 
-              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-            />
-          </div>
-          <div className="absolute top-4 right-4">
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-4">
+            <h1 className="text-3xl font-bold text-blue-900">{rutaData.name}</h1>
+            
             <button
               onClick={handleToggleFavorite}
               disabled={isLoadingFavorite}
@@ -420,7 +415,7 @@ const RutaDetail = ({ ruta: initialRoute }) => {
               ) : (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  key={heartKey} // Usando la clave para forzar una nueva animación
+                  key={heartKey}
                   className={`h-6 w-6 ${isFavorite ? 'text-red-500' : 'text-gray-400'} transition-all duration-100 ${isFavorite ? 'animate-[pulse_0.3s_ease-in-out_1] scale-110' : 'hover:scale-110 hover:text-red-400'}`}
                   fill={isFavorite ? "currentColor" : "none"}
                   viewBox="0 0 24 24" 
@@ -438,18 +433,25 @@ const RutaDetail = ({ ruta: initialRoute }) => {
             </button>
             {/* Mensaje de feedback */}
             {feedbackMessage && (
-              <div className="absolute top-16 right-4 transform transition-opacity duration-300 opacity-90">
+              <div className="absolute right-10 transform transition-opacity duration-300 opacity-90">
                 <div className={`bg-blue-700 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in-out`}>
                   {feedbackMessage}
                 </div>
               </div>
             )}
           </div>
-        </div>
-        
-        {/* Contenido principal */}
-        <div className="p-6">
-          <h1 className="text-3xl font-bold text-blue-900 mb-3">{rutaData.name}</h1>
+          
+          {/* Mapa de ruta (ahora como primer elemento visible) */}
+          {rutaData.route_map && (
+            <div className="mb-6">
+              <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                <RouteMap 
+                  routeData={rutaData.route_map} 
+                  editable={false} 
+                />
+              </div>
+            </div>
+          )}
           
           {/* Metadatos de la ruta */}
           <div className="flex flex-wrap gap-6 mb-6 text-gray-600">
@@ -567,18 +569,7 @@ const RutaDetail = ({ ruta: initialRoute }) => {
               </div>
             </div>
           )}
-          
-          {/* Mapa */}
-          {rutaData.route_map && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-3">Mapa de la ruta</h2>
-              <div className="border border-gray-200 rounded-lg overflow-hidden p-2 bg-gray-50">
-                <div dangerouslySetInnerHTML={{ __html: rutaData.route_map }} className="w-full h-64 sm:h-96" />
-              </div>
-            </div>
-          )}
-          
-          {/* Indicador de actualización */}
+            {/* Indicador de actualización */}
           {isRefreshing && (
             <div className="flex justify-center items-center mb-4">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-700"></div>
@@ -619,12 +610,11 @@ const RutaDetail = ({ ruta: initialRoute }) => {
           `
         }} />
       </div>
-      
-      {/* Modal de inicio de sesión */}
+        {/* Modal de inicio de sesión */}
       {showLoginModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+        <div className="fixed inset-0 flex items-center justify-center z-[1000]" onClick={(e) => e.target === e.currentTarget && closeModal()}>
           <div className={`fixed inset-0 bg-black transition-opacity duration-300 ${modalVisible ? 'opacity-50' : 'opacity-0'}`}></div>
-          <div className={`bg-white rounded-lg shadow-xl overflow-hidden w-11/12 max-w-md mx-auto transform transition-all duration-300 ${modalVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${isClosing ? 'animate-modal-out' : ''}`}>
+          <div className={`bg-white rounded-lg shadow-xl overflow-hidden w-11/12 max-w-md mx-auto transform transition-all duration-300 ${modalVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${isClosing ? 'animate-modal-out' : ''} z-[1001] relative`}>
             <div className="relative p-6">
               <button 
                 onClick={closeModal} 

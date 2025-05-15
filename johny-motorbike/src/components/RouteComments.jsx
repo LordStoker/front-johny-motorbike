@@ -528,13 +528,12 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
           <p className="text-gray-600 italic">No hay comentarios para esta ruta. ¡Sé el primero en comentar!</p>
         )}
       </div>
-      
-      {/* Modal con animación */}
+        {/* Modal con animación */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 backdrop-blur-xs">
           <div
             id="modal-login-popup"
-            className={`bg-white/80 rounded-lg shadow-lg p-6 w-full max-w-xs text-center transform transition-all duration-300
+            className={`bg-white/80 rounded-lg shadow-lg p-6 w-full max-w-xs text-center transform transition-all duration-300 z-[1001] relative
               ${modalVisible && !isClosing ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}
           >
             <h4 className="text-lg font-bold mb-2 text-blue-800">Acción no permitida</h4>

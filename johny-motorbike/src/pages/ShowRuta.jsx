@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAppContext } from '../context/AppContext'
 import RutaDetail from '../components/RutaDetail'
+import RouteMap from '../components/RouteMap'
 
 export default function ShowRuta() {
   const { id } = useParams()

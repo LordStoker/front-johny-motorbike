@@ -3,6 +3,9 @@
 @tailwind components; */
 @tailwind utilities;
 
+/* Importar los estilos de Leaflet */
+@import "leaflet/dist/leaflet.css";
+
 @layer base {
   body {
     @apply bg-gray-50;

@@ -20,11 +20,23 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
   const [countries, setCountries] = useState([])
   const [roles, setRoles] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  // Estado para las rutas favoritas
+  const [error, setError] = useState(null)  // Estado para las rutas favoritas
   const [favoriteRoutes, setFavoriteRoutes] = useState([])
   const [favoriteRouteIds, setFavoriteRouteIds] = useState(new Set()) // Set para búsqueda O(1)
   const [loadingFavorites, setLoadingFavorites] = useState(false)
+  
+  // --- NOTIFICACIONES ---
+  const [notification, setNotification] = useState(null)
+  
+  // Función para mostrar una notificación
+  const showNotification = (message, type = 'success', duration = 3000) => {
+    setNotification({ message, type, id: Date.now() })
+    
+    // Eliminar la notificación después del tiempo especificado
+    setTimeout(() => {
+      setNotification(null)
+    }, duration)
+  }
 
   // --- AUTENTICACIÓN ---
   const [user, setUser] = useState(() => {
@@ -666,14 +678,15 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
     resetPassword,
     updateProfile,
     changePassword,
-    logout,
-    favoriteRoutes,
+    logout,    favoriteRoutes,
     loadingFavorites,
     checkFavorite,
     toggleFavorite,
     loadFavoriteRoutes,
     loadFavoriteRouteIds,
-    favoriteRouteIds
+    favoriteRouteIds,
+    notification,
+    showNotification
   }
 
   return (

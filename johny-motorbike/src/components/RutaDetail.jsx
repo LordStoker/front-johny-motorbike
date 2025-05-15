@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import defaultRouteImage from '../assets/default-route-image.jpg';
@@ -6,16 +6,245 @@ import RouteComments from './RouteComments';
 import StarRating from './StarRating';
 import RouteIcon from './RouteIcons';
 
+// Mapa de códigos de país para mostrar banderas
+const countryFlags = {
+  'Afghanistan': 'af',
+  'Albania': 'al',
+  'Germany': 'de',
+  'Andorra': 'ad',
+  'Angola': 'ao',
+  'Antigua and Barbuda': 'ag',
+  'Saudi Arabia': 'sa',
+  'Algeria': 'dz',
+  'Argentina': 'ar',
+  'Armenia': 'am',
+  'Australia': 'au',
+  'Austria': 'at',
+  'Azerbaijan': 'az',
+  'Bahamas': 'bs',
+  'Bangladesh': 'bd',
+  'Barbados': 'bb',
+  'Bahrain': 'bh',
+  'Belgium': 'be',
+  'Belize': 'bz',
+  'Benin': 'bj',
+  'Belarus': 'by',
+  'Bolivia': 'bo',
+  'Bosnia and Herzegovina': 'ba',
+  'Botswana': 'bw',
+  'Brazil': 'br',
+  'Brunei': 'bn',
+  'Bulgaria': 'bg',
+  'Burkina Faso': 'bf',
+  'Burundi': 'bi',
+  'Bhutan': 'bt',
+  'Cape Verde': 'cv',
+  'Cambodia': 'kh',
+  'Cameroon': 'cm',
+  'Canada': 'ca',
+  'Qatar': 'qa',
+  'Chad': 'td',
+  'Chile': 'cl',
+  'China': 'cn',
+  'Cyprus': 'cy',
+  'Vatican City': 'va',
+  'Colombia': 'co',
+  'Comoros': 'km',
+  'South Korea': 'kr',
+  'North Korea': 'kp',
+  'Ivory Coast': 'ci',
+  'Costa Rica': 'cr',
+  'Croatia': 'hr',
+  'Cuba': 'cu',
+  'Denmark': 'dk',
+  'Dominica': 'dm',
+  'Ecuador': 'ec',
+  'Egypt': 'eg',
+  'El Salvador': 'sv',
+  'United Arab Emirates': 'ae',
+  'Eritrea': 'er',
+  'Slovakia': 'sk',
+  'Slovenia': 'si',
+  'Spain': 'es',
+  'United States': 'us',
+  'Estonia': 'ee',
+  'Ethiopia': 'et',
+  'Philippines': 'ph',
+  'Finland': 'fi',
+  'Fiji': 'fj',
+  'France': 'fr',
+  'Gabon': 'ga',
+  'Gambia': 'gm',
+  'Georgia': 'ge',
+  'Ghana': 'gh',
+  'Grenada': 'gd',
+  'Greece': 'gr',
+  'Guatemala': 'gt',
+  'Guinea': 'gn',
+  'Equatorial Guinea': 'gq',
+  'Guinea-Bissau': 'gw',
+  'Guyana': 'gy',
+  'Haiti': 'ht',
+  'Honduras': 'hn',
+  'Hungary': 'hu',
+  'India': 'in',
+  'Indonesia': 'id',
+  'Iraq': 'iq',
+  'Iran': 'ir',
+  'Ireland': 'ie',
+  'Iceland': 'is',
+  'Marshall Islands': 'mh',
+  'Solomon Islands': 'sb',
+  'Israel': 'il',
+  'Italy': 'it',
+  'Jamaica': 'jm',
+  'Japan': 'jp',
+  'Jordan': 'jo',
+  'Kazakhstan': 'kz',
+  'Kenya': 'ke',
+  'Kyrgyzstan': 'kg',
+  'Kiribati': 'ki',
+  'Kuwait': 'kw',
+  'Laos': 'la',
+  'Lesotho': 'ls',
+  'Latvia': 'lv',
+  'Lebanon': 'lb',
+  'Liberia': 'lr',
+  'Libya': 'ly',
+  'Liechtenstein': 'li',
+  'Lithuania': 'lt',
+  'Luxembourg': 'lu',
+  'North Macedonia': 'mk',
+  'Madagascar': 'mg',
+  'Malaysia': 'my',
+  'Malawi': 'mw',
+  'Maldives': 'mv',
+  'Mali': 'ml',
+  'Malta': 'mt',
+  'Morocco': 'ma',
+  'Mauritius': 'mu',
+  'Mauritania': 'mr',
+  'Mexico': 'mx',
+  'Micronesia': 'fm',
+  'Moldova': 'md',
+  'Monaco': 'mc',
+  'Mongolia': 'mn',
+  'Montenegro': 'me',
+  'Mozambique': 'mz',
+  'Myanmar': 'mm',
+  'Namibia': 'na',
+  'Nauru': 'nr',
+  'Nepal': 'np',
+  'Nicaragua': 'ni',
+  'Niger': 'ne',
+  'Nigeria': 'ng',
+  'Norway': 'no',
+  'New Zealand': 'nz',
+  'Oman': 'om',
+  'Netherlands': 'nl',
+  'Pakistan': 'pk',
+  'Palau': 'pw',
+  'Palestine': 'ps',
+  'Panama': 'pa',
+  'Papua New Guinea': 'pg',
+  'Paraguay': 'py',
+  'Peru': 'pe',
+  'Poland': 'pl',
+  'Portugal': 'pt',
+  'United Kingdom': 'gb',
+  'Central African Republic': 'cf',
+  'Czech Republic': 'cz',
+  'Dominican Republic': 'do',
+  'Democratic Republic of the Congo': 'cd',
+  'Republic of the Congo': 'cg',
+  'Romania': 'ro',
+  'Rwanda': 'rw',
+  'Russia': 'ru',
+  'Samoa': 'ws',
+  'Saint Kitts and Nevis': 'kn',
+  'San Marino': 'sm',
+  'Saint Vincent and the Grenadines': 'vc',
+  'Saint Lucia': 'lc',
+  'São Tomé and Príncipe': 'st',
+  'Senegal': 'sn',
+  'Serbia': 'rs',
+  'Seychelles': 'sc',
+  'Sierra Leone': 'sl',
+  'Singapore': 'sg',
+  'Syria': 'sy',
+  'Somalia': 'so',
+  'Sri Lanka': 'lk',
+  'Swaziland': 'sz',
+  'South Africa': 'za',
+  'Sudan': 'sd',
+  'South Sudan': 'ss',
+  'Sweden': 'se',
+  'Switzerland': 'ch',
+  'Suriname': 'sr',
+  'Thailand': 'th',
+  'Taiwan': 'tw',
+  'Tanzania': 'tz',
+  'Tajikistan': 'tj',
+  'East Timor': 'tl',
+  'Togo': 'tg',
+  'Tonga': 'to',
+  'Trinidad and Tobago': 'tt',
+  'Tunisia': 'tn',
+  'Turkmenistan': 'tm',
+  'Turkey': 'tr',
+  'Tuvalu': 'tv',
+  'Ukraine': 'ua',
+  'Uganda': 'ug',
+  'Uruguay': 'uy',
+  'Uzbekistan': 'uz',
+  'Vanuatu': 'vu',
+  'Vatican City': 'va',
+  'Venezuela': 've',
+  'Vietnam': 'vn',
+  'Yemen': 'ye',
+  'Djibouti': 'dj',
+  'Zambia': 'zm',
+  'Zimbabwe': 'zw'
+};
+
+// Función para obtener el código de bandera a partir del nombre del país
+const getFlagCode = (countryName) => {
+  return countryFlags[countryName] || 'un'; // 'un' es la bandera de Naciones Unidas (por defecto)
+};
+
 /**
  * Componente que muestra los detalles de una ruta específica
  * @param {Object} props
  * @param {Object} props.ruta - Datos completos de la ruta a mostrar
  */
 const RutaDetail = ({ ruta: initialRoute }) => {
-  const { user, checkFavorite, toggleFavorite } = useAppContext();
+  const { user, checkFavorite, toggleFavorite, countries } = useAppContext();
   const navigate = useNavigate();
   const [rutaData, setRutaData] = useState(initialRoute);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  
+  // Obtener el país de la ruta, considerando diferentes estructuras de datos
+  const countryInfo = useMemo(() => {
+    // Si ya tenemos el objeto country completo
+    if (typeof rutaData.country === 'object' && rutaData.country?.name) {
+      return rutaData.country;
+    }
+    
+    // Si tenemos el país como string
+    if (typeof rutaData.country === 'string') {
+      return { name: rutaData.country };
+    }
+    
+    // Si tenemos country_id o country_name
+    if (rutaData.country_id && countries.length > 0) {
+      const foundCountry = countries.find(c => c.id === rutaData.country_id);
+      return foundCountry || null;
+    } else if (rutaData.country_name) {
+      return { name: rutaData.country_name };
+    }
+    
+    return null;
+  }, [rutaData, countries]);
   const [isClosing, setIsClosing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -278,15 +507,19 @@ const RutaDetail = ({ ruta: initialRoute }) => {
                 className="mr-2"
               />
               <span>{rutaData.difficulty?.name || 'No especificada'}</span>
-            </div>
-            
-            {/* País a continuación de la dificultad */}
-            {rutaData.country && (
+            </div>            {/* País a continuación de la dificultad */}
+            {countryInfo && (
               <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-                </svg>
-                <span>{typeof rutaData.country === 'object' ? rutaData.country.name : rutaData.country}</span>
+                {countryInfo.name && (
+                  <img 
+                    src={`https://flagcdn.com/16x12/${getFlagCode(countryInfo.name)}.png`}
+                    alt={`Bandera de ${countryInfo.name}`}
+                    className="h-3.5 w-5 mr-2 object-cover"
+                  />
+                )}
+                <span>
+                  {countryInfo.name || 'País no especificado'}
+                </span>
               </div>
             )}
           </div>          {/* Etiquetas */}

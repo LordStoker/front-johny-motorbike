@@ -7,6 +7,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [useTestMode, setUseTestMode] = useState(false); // Para usar el endpoint de prueba
 
   const validateForm = () => {
     const errors = {};
@@ -17,14 +18,17 @@ export default function ForgotPassword() {
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
+  };  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      const success = await sendPasswordResetLink(email);
-      if (success) {
-        setSubmitSuccess(true);
+      try {
+        const success = await sendPasswordResetLink(email, useTestMode);
+        if (success) {
+          setSubmitSuccess(true);
+        }
+      } catch (error) {
+        console.error('Error al enviar solicitud:', error);
+        // El error ya se manejará en el contexto, pero capturamos excepciones no controladas
       }
     }
   };
@@ -81,22 +85,43 @@ export default function ForgotPassword() {
               {formErrors.email && (
                 <p className="mt-1 text-xs text-red-500 font-medium">{formErrors.email}</p>
               )}
-            </div>
-
-            <div className="flex items-center justify-between">
+            </div>            <div className="flex items-center justify-between">
               <div className="text-sm">
                 <Link to="/login" className="text-blue-600 hover:text-blue-800 hover:underline">
                   Volver a inicio de sesión
                 </Link>
               </div>
-            </div>
-
-            <button
+              
+              {/* Opción de modo de prueba - solo visible en desarrollo */}
+              {import.meta.env.DEV && (
+                <div className="flex items-center">
+                  <input
+                    id="test-mode"
+                    name="test-mode"
+                    type="checkbox"
+                    checked={useTestMode}
+                    onChange={() => setUseTestMode(prev => !prev)}
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                  />
+                  <label htmlFor="test-mode" className="ml-2 text-sm text-blue-600">
+                    Modo prueba
+                  </label>
+                </div>
+              )}
+            </div><button
               type="submit"
               disabled={authLoading}
               className="w-full py-2 px-4 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white font-bold rounded-lg shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {authLoading ? 'Enviando...' : 'Enviar enlace de recuperación'}
+              {authLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Enviando...
+                </span>
+              ) : 'Enviar enlace de recuperación'}
             </button>
           </form>
         )}

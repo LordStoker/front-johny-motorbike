@@ -336,12 +336,119 @@ const RutaCard = ({ ruta, className = '' }) => {
   if (!ruta) {
     return null;
   }
-    // Imagen de la ruta o imagen por defecto
-  const routeImage = ruta.image
-    ? (ruta.image.startsWith('data:') ? ruta.image : `${import.meta.env.VITE_API_URL}/storage/${ruta.image}`)
-    : (ruta.route_images && ruta.route_images[0]
+  // Imagen de la ruta o imagen por defecto
+  let routeImage;
+    // Si es auto_generated_map, generamos URL de la imagen estática de Geoapify
+  if (ruta.image === 'auto_generated_map' && ruta.route_map && import.meta.env.VITE_GEOAPIFY_API_KEY) {
+    try {
+      console.log('Generando imagen de mapa para ruta con ID:', ruta.id);
+      
+      // Parsear las coordenadas de la ruta
+      let coordinates = [];
+      try {
+        // Primero intentamos parsear como JSON si es una cadena
+        if (typeof ruta.route_map === 'string') {
+          coordinates = JSON.parse(ruta.route_map);
+        } 
+        // Si es un array, lo usamos directamente
+        else if (Array.isArray(ruta.route_map)) {
+          coordinates = ruta.route_map;
+        }
+        
+        console.log('Coordenadas parseadas:', coordinates.length);
+      } catch (parseError) {
+        console.error('Error al parsear coordenadas:', parseError);
+        coordinates = [];
+      }
+      
+      if (Array.isArray(coordinates) && coordinates.length >= 2) {
+        // Calcular centro y límites
+        const bounds = coordinates.reduce((acc, coord) => {
+          // Asegurarse de que las coordenadas son números válidos
+          const lat = parseFloat(coord[0]);
+          const lng = parseFloat(coord[1]);
+          
+          if (!isNaN(lat) && !isNaN(lng)) {
+            return {
+              minLat: Math.min(acc.minLat, lat),
+              maxLat: Math.max(acc.maxLat, lat),
+              minLng: Math.min(acc.minLng, lng),
+              maxLng: Math.max(acc.maxLng, lng)
+            };
+          }
+          return acc;
+        }, {
+          minLat: parseFloat(coordinates[0][0]),
+          maxLat: parseFloat(coordinates[0][0]),
+          minLng: parseFloat(coordinates[0][1]),
+          maxLng: parseFloat(coordinates[0][1])
+        });
+        
+        // Calcular centro
+        const centerLat = (bounds.minLat + bounds.maxLat) / 2;
+        const centerLng = (bounds.minLng + bounds.maxLng) / 2;
+        
+        // Calcular zoom basado en los límites
+        const latDiff = bounds.maxLat - bounds.minLat;
+        const lngDiff = bounds.maxLng - bounds.minLng;
+        const maxDiff = Math.max(latDiff, lngDiff);
+        let zoom = 13; // Zoom predeterminado
+        
+        // Ajustar zoom según la distancia
+        if (maxDiff > 0.5) zoom = 10;
+        if (maxDiff > 1) zoom = 9;
+        if (maxDiff > 2) zoom = 8;
+        if (maxDiff > 4) zoom = 7;
+        if (maxDiff > 8) zoom = 6;
+        
+        // Crear URL de Geoapify
+        const apiKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
+        const geoapifyBaseUrl = `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=600&height=400&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&apiKey=${apiKey}`;
+        
+        // Añadir marcadores (inicio y fin)
+        const firstPoint = coordinates[0];
+        const lastPoint = coordinates[coordinates.length - 1];
+        const markersParam = `&marker=lonlat:${firstPoint[1]},${firstPoint[0]};type:awesome;color:%23ff0000;size:medium|lonlat:${lastPoint[1]},${lastPoint[0]};type:awesome;color:%230000ff;size:medium`;
+        
+        // Añadir línea de ruta - Limitar puntos para evitar URLs demasiado largas
+        const pathPoints = coordinates.length > 50 
+          ? coordinates.filter((_, idx) => idx % Math.max(1, Math.floor(coordinates.length / 50)) === 0)
+          : coordinates;
+          
+        const pathParam = `&polyline=width:3;color:%23ff0000;opacity:0.9;${pathPoints.map(p => `${p[1]},${p[0]}`).join(',')}`;
+        
+        // URL completa
+        routeImage = geoapifyBaseUrl + markersParam + pathParam;
+        console.log('URL de imagen generada:', routeImage.substring(0, 100) + '...');
+      } else {
+        console.warn('La ruta no tiene suficientes coordenadas válidas');
+        routeImage = defaultRouteImage;
+      }
+    } catch (e) {
+      console.error('Error al generar imagen de mapa:', e);
+      routeImage = defaultRouteImage;
+    }  } else if (ruta.image) {
+    // Si no es auto_generated_map, verificar si es una URL externa, un dato data URI o una imagen almacenada
+    if (ruta.image.startsWith('http://') || ruta.image.startsWith('https://')) {
+      // URL externa directa
+      routeImage = ruta.image;
+    } else if (ruta.image.startsWith('data:')) {
+      // Data URI
+      routeImage = ruta.image;
+    } else {
+      // Imagen almacenada en el servidor
+      routeImage = `${import.meta.env.VITE_API_URL}/storage/${ruta.image}`;
+    }
+    
+    console.log('Usando imagen normal:', ruta.image.substring(0, 30) + '...');
+  } else {
+    // Si no hay imagen, usar imagen de galería o la imagen por defecto
+    routeImage = (ruta.route_images && ruta.route_images[0])
       ? `${import.meta.env.VITE_API_URL}/storage/${ruta.route_images[0].url}`
-      : defaultRouteImage);
+      : defaultRouteImage;
+      
+    console.log('Usando imagen de galería o predeterminada');
+  }
   
   return (
     <div className={`bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col ${className}`}>
@@ -484,7 +591,7 @@ const RutaCard = ({ ruta, className = '' }) => {
           className="block text-center bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition mt-auto"
         >
           Ver detalles
-        </Link>
+        </Link> 
       </div>
       
       {/* Estilos para animaciones avanzadas */}

@@ -1,12 +1,44 @@
-# React + Vite
+# Johny Motorbike - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend para la aplicación de rutas en moto Johny Motorbike, desarrollada con React y Vite.
 
-Currently, two official plugins are available:
+## Requisitos previos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 16 o superior
+- npm 7 o superior
 
-## Expanding the ESLint configuration
+## Configuración
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Clona el repositorio
+2. Instala las dependencias:
+```bash
+npm install
+```
+
+3. Configura las variables de entorno:
+   - Copia el archivo `.env` a `.env.local`
+   - Actualiza las variables según tu entorno
+
+## Configuración de mapas
+
+Esta aplicación utiliza Geoapify para mostrar mapas estáticos de las rutas. Para configurar correctamente los mapas, sigue las instrucciones en [CÓMO_CONFIGURAR_MAPAS.md](./CÓMO_CONFIGURAR_MAPAS.md).
+
+## Desarrollo
+
+Para iniciar el servidor de desarrollo:
+
+```bash
+npm run dev
+```
+
+Esto iniciará la aplicación en modo desarrollo, normalmente en `http://localhost:5173`.
+
+## Características
+
+- Visualización de rutas en motocicleta
+- Filtrado por país, distancia, dificultad, etc.
+- Autenticación de usuarios
+- Guardar rutas favoritas
+- Comentarios en rutas
+- Visualización de mapas estáticos de rutas
+- Puntuaciones y valoraciones de rutas

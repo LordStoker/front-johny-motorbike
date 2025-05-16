@@ -4,7 +4,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './RouteMap.css'; // Importamos nuestros estilos personalizados
 import axios from 'axios';
-import html2canvas from 'html2canvas';
 
 // Corrige el problema de los iconos de marcadores que no se muestran en React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -86,9 +85,9 @@ const calculateTotalDistance = (coords) => {
 
 // Función para estimar la duración en minutos basada en la distancia
 const estimateDuration = (distanceKm) => {
-  // Suponemos una velocidad media de 60 km/h para una ruta en moto
+  // Suponemos una velocidad media de 90 km/h para una ruta en moto
   // Convertir a horas y luego a minutos
-  const hoursEstimated = distanceKm / 60;
+  const hoursEstimated = distanceKm / 90;
   const minutesEstimated = Math.ceil(hoursEstimated * 60);
   
   // Mínimo 1 minuto
@@ -115,7 +114,7 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
   const [isCapturingMap, setIsCapturingMap] = useState(false);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-    // Función para obtener el país mediante geocodificación inversa
+  // Función para obtener el país mediante geocodificación inversa
   const getCountryFromCoordinates = useCallback(async (coords) => {
     if (!coords || coords.length === 0) return null;
     
@@ -124,9 +123,36 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
       const midIndex = Math.floor(coords.length / 2);
       const [lat, lon] = coords[midIndex];
       
+      // Usamos la clave de caché para verificar si ya tenemos esta ubicación en el almacenamiento local
+      const cacheKey = `geo_country_${lat.toFixed(2)}_${lon.toFixed(2)}`;
+      const cachedData = localStorage.getItem(cacheKey);
+      
+      // Si tenemos datos en caché y no tienen más de una semana, los usamos
+      if (cachedData) {
+        try {
+          const cachedCountryData = JSON.parse(cachedData);
+          const cacheTime = cachedCountryData.timestamp || 0;
+          const now = Date.now();
+          
+          // Si la caché es reciente (menos de 7 días), la usamos
+          if (now - cacheTime < 7 * 24 * 60 * 60 * 1000) {
+            console.log('Usando país desde caché local:', cachedCountryData.country);
+            return cachedCountryData.country;
+          }
+        } catch (e) {
+          console.warn('Error al analizar datos de país en caché:', e);
+        }
+      }
+      
       // Usamos la API de OpenStreetMap Nominatim para la geocodificación inversa
+      console.log('Consultando API para obtener país...');
       const response = await axios.get(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=5`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=5`,
+        {
+          headers: {
+            'User-Agent': 'JohnyMotorbikeApp/1.0'
+          }
+        }
       );
       
       if (response.data && response.data.address && response.data.address.country) {
@@ -134,14 +160,26 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
         // Intentar obtener el código de país en formato ISO 3166-1 alpha-2 (ES, UK, US, etc.)
         const countryCode = response.data.address.country_code ? 
           response.data.address.country_code.toUpperCase() : null;
-          
         
-        
-        // Devolvemos un objeto con el nombre del país y su código
-        return {
+        // Guardamos el resultado en localStorage para futuras consultas
+        const countryData = {
           name: detectedCountry,
           code: countryCode
         };
+        
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            country: countryData,
+            timestamp: Date.now()
+          }));
+        } catch (e) {
+          console.warn('Error al guardar país en caché:', e);
+        }
+        
+        console.log('País obtenido de API:', detectedCountry);
+        
+        // Devolvemos un objeto con el nombre del país y su código
+        return countryData;
       }
     } catch (error) {
       console.error('Error al obtener el país:', error);
@@ -217,50 +255,23 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
       newCoordinates[index] = [position.lat, position.lng];
       return newCoordinates;
     });
-  };
-    // Función para capturar el mapa como una imagen
-  const captureMap = useCallback(async () => {
-    if (coordinates.length < 2 || !mapContainerRef.current) return null;
+  };  // Simplificamos esta función ya que ya no necesitamos capturar el mapa como imagen
+  const captureMap = useCallback(() => {
+    console.log('Capturando mapa como auto_generated_map');
+    // En lugar de capturar, simplemente devolvemos el marcador para generación dinámica
+    if (onMapCapture && typeof onMapCapture === 'function') {
+      onMapCapture('auto_generated_map');
+    }
+    return 'auto_generated_map';
+  }, [onMapCapture]);
 
-    setIsCapturingMap(true);
-    
-    try {
-      // Capture el mapa con html2canvas
-      const mapContainer = mapContainerRef.current.querySelector('.leaflet-container');
-      const canvas = await html2canvas(mapContainer, {
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false,
-        scale: 1
-      });
-      
-      // Convertir el canvas a una imagen base64
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
-      
-      // Si se proporcionó una función de callback, enviarle la imagen
-      if (onMapCapture && typeof onMapCapture === 'function') {
-        onMapCapture(imageBase64);
-      }
-      
-      return imageBase64;
-    } catch (error) {
-      console.error('Error al capturar el mapa:', error);
-      return null;
-    } finally {
-      setIsCapturingMap(false);
-    }  }, [coordinates, onMapCapture]);
-
-  // Cuando se detectan cambios en las coordenadas y hay al menos 2 puntos, 
-  // capturamos automáticamente el mapa si es editable
+  // Ya no capturamos automáticamente el mapa al editar
+  // En su lugar, simplemente notificamos que debe generarse una imagen dinámica
   useEffect(() => {
     if (editable && coordinates.length >= 2 && onMapCapture) {
-      // Esperamos un momento para que el mapa se renderice completamente
-      const timer = setTimeout(() => {
-        captureMap();
-      }, 300);
-      
-      return () => clearTimeout(timer);
+      console.log('Notificando que se debe generar una imagen dinámica');
+      // En lugar de capturar la imagen, enviamos el marcador para generación dinámica
+      onMapCapture('auto_generated_map');
     }
   }, [coordinates, editable, onMapCapture, captureMap]);
 

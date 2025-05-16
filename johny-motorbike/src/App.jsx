@@ -15,14 +15,15 @@ import Profile from './pages/user/Profile'
 import ChangePassword from './pages/user/ChangePassword'
 import FavoriteRoutes from './pages/FavoriteRoutes'
 import { AppProvider } from './context/AppContext'
+import MapConfigMessage from './components/MapConfigMessage'
 
 export default function App() {
   return (
     <AppProvider>
-      <Router>
-        <div className="min-h-screen flex flex-col">
+      <Router>        <div className="min-h-screen flex flex-col">
           <Header />
-          <main className="flex-grow">
+          <main className="flex-grow">            {/* El componente MapConfigMessage ahora verifica internamente si la API key es válida */}
+            <MapConfigMessage />
             <Layout>
               <Routes>
                 <Route path="/" element={<Home />} />

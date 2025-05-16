@@ -371,13 +371,7 @@ const RutaDetail = ({ ruta: initialRoute }) => {
         <p className="text-center text-gray-500">Cargando detalles de la ruta...</p>
       </div>
     );
-  }
-    // Extraer imagen (prioridad: imagen capturada del mapa > imágenes de galería > imagen por defecto)
-  const mainImage = rutaData.image
-    ? (rutaData.image.startsWith('data:') ? rutaData.image : `${import.meta.env.VITE_API_URL}/storage/${rutaData.image}`)
-    : (rutaData.route_images && rutaData.route_images[0]
-      ? `${import.meta.env.VITE_API_URL}/storage/${rutaData.route_images[0].url}`
-      : defaultRouteImage);
+  }  // Ya no necesitamos generar la imagen del mapa, ya que esta se mostrará solo en las tarjetas
     return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -438,12 +432,12 @@ const RutaDetail = ({ ruta: initialRoute }) => {
                   {feedbackMessage}
                 </div>
               </div>
-            )}
-          </div>
+            )}          </div>
           
-          {/* Mapa de ruta (ahora como primer elemento visible) */}
+          {/* Mapa interactivo de ruta (si existe) */}
           {rutaData.route_map && (
             <div className="mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-3">Mapa interactivo</h2>
               <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
                 <RouteMap 
                   routeData={rutaData.route_map} 

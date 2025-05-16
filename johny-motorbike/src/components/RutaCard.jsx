@@ -341,7 +341,7 @@ const RutaCard = ({ ruta, className = '' }) => {
     // Si es auto_generated_map, generamos URL de la imagen estática de Geoapify
   if (ruta.image === 'auto_generated_map' && ruta.route_map && import.meta.env.VITE_GEOAPIFY_API_KEY) {
     try {
-      console.log('Generando imagen de mapa para ruta con ID:', ruta.id);
+      // console.log('Generando imagen de mapa para ruta con ID:', ruta.id);
       
       // Parsear las coordenadas de la ruta
       let coordinates = [];
@@ -355,7 +355,7 @@ const RutaCard = ({ ruta, className = '' }) => {
           coordinates = ruta.route_map;
         }
         
-        console.log('Coordenadas parseadas:', coordinates.length);
+        // console.log('Coordenadas parseadas:', coordinates.length);
       } catch (parseError) {
         console.error('Error al parsear coordenadas:', parseError);
         coordinates = [];
@@ -419,7 +419,7 @@ const RutaCard = ({ ruta, className = '' }) => {
         
         // URL completa
         routeImage = geoapifyBaseUrl + markersParam + pathParam;
-        console.log('URL de imagen generada:', routeImage.substring(0, 100) + '...');
+        
       } else {
         console.warn('La ruta no tiene suficientes coordenadas válidas');
         routeImage = defaultRouteImage;
@@ -447,7 +447,7 @@ const RutaCard = ({ ruta, className = '' }) => {
       ? `${import.meta.env.VITE_API_URL}/storage/${ruta.route_images[0].url}`
       : defaultRouteImage;
       
-    console.log('Usando imagen de galería o predeterminada');
+    
   }
   
   return (

@@ -68,7 +68,8 @@ export default function Register() {
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
-
+  const [registrationSuccess, setRegistrationSuccess] = useState(false)
+  
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (validateForm()) {
@@ -79,7 +80,12 @@ export default function Register() {
         formData.password
       )
       if (success) {
-        navigate('/')
+        // Mostrar mensaje de éxito
+        setRegistrationSuccess(true)
+        // Redireccionar después de 2.5 segundos
+        setTimeout(() => {
+          navigate('/')
+        }, 2500)
       }
     }
   }
@@ -90,14 +96,22 @@ export default function Register() {
         <div className="mb-8 text-center">
           <h2 className="text-4xl font-bold text-blue-800 mb-2 tracking-tight drop-shadow-sm">Crear cuenta</h2>
           <p className="text-gray-500 text-base">Regístrate para comenzar tu aventura</p>
-        </div>
-        {authError && (
+        </div>        {registrationSuccess ? (
+          <div className="bg-green-50 border border-green-300 text-green-700 px-4 py-3 rounded-lg mb-4 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <svg className="w-5 h-5 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="font-bold">¡Registro completado con éxito!</span>
+            </div>
+            <p>Serás redirigido a la página principal en unos segundos...</p>
+          </div>
+        ) : authError && (
           <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded-lg mb-4 text-center animate-pulse">
             {authError}
           </div>
-        )}
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+        )}        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4" style={{ opacity: registrationSuccess ? '0.6' : '1', pointerEvents: registrationSuccess ? 'none' : 'auto' }}>
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-blue-900 mb-1">Nombre</label>
               <input
@@ -221,13 +235,12 @@ export default function Register() {
             <div className="text-sm">
               <Link to="/login" className="text-blue-700 hover:underline font-semibold">¿Ya tienes cuenta? Inicia sesión</Link>
             </div>
-          </div>
-          <button
+          </div>          <button
             type="submit"
-            disabled={authLoading}
+            disabled={authLoading || registrationSuccess}
             className="w-full py-2 px-4 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white font-bold rounded-lg shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed mt-2"
           >
-            {authLoading ? 'Procesando...' : 'Registrarse'}
+            {registrationSuccess ? '¡Registro completado!' : authLoading ? 'Procesando...' : 'Registrarse'}
           </button>
         </form>
       </div>

@@ -3,12 +3,11 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import HelmetIcon from '../assets/helmet-favicon.png'
 import { useAppContext } from '../context/AppContext'
 
-export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+export default function Header() {  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const location = useLocation()
   const isHomePage = location.pathname === '/'
-  const { user, logout } = useAppContext()
+  const { user, logout, showNotification } = useAppContext()
   const navigate = useNavigate()
 
   // Estado para el dropdown de login/registro
@@ -57,14 +56,25 @@ export default function Header() {
   }, [isUserMenuOpen])
 
   // Determinar si el header debe ser transparente (solo en la página de inicio y cuando no hay scroll)
-  const isTransparent = isHomePage && !isScrolled
-
-  // Función para manejar logout
+  const isTransparent = isHomePage && !isScrolled  // Función para manejar logout
   const handleLogout = () => {
+    // Obtenemos el nombre del usuario para personalizar el mensaje
+    const userName = user?.name || '';
+    
+    // Primero ejecutamos el logout para cerrar la sesión
     logout()
+    
+    // Cerramos los menús
     setIsMenuOpen(false)
     setIsUserMenuOpen(false)
-    navigate('/')
+    
+    // Mostrar mensaje de éxito usando el sistema de notificaciones
+    showNotification(`¡Hasta pronto${userName ? `, ${userName}` : ''}! Has cerrado sesión correctamente.`, 'success', 2500)
+    
+    // Retrasamos la navegación para mostrar el mensaje
+    setTimeout(() => {
+      navigate('/')
+    }, 2500)
   }
 
   return (

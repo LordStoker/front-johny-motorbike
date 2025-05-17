@@ -233,15 +233,23 @@ export default function Rutas() {
       // Usamos requestIdleCallback (o un polyfill) para cargar favoritos cuando el navegador esté inactivo
       // Esto evita bloquear el renderizado inicial de la página
       const loadFavoritesWhenIdle = () => {
-        if ('requestIdleCallback' in window) {
-          window.requestIdleCallback(() => {
-            loadFavoriteRouteIds();
-          }, { timeout: 2000 }); // Con timeout para asegurar que se ejecute incluso en navegadores ocupados
-        } else {
-          // Fallback para navegadores que no soportan requestIdleCallback
-          setTimeout(() => {
-            loadFavoriteRouteIds();
-          }, 100);
+        // Crear un debounce sencillo para evitar múltiples llamadas
+        const lastCall = window.sessionStorage.getItem('lastFavoriteIdsCall');
+        const now = Date.now();
+        
+        // Solo permitir una carga cada 30 segundos como máximo
+        if (!lastCall || (now - parseInt(lastCall)) > 30000) {
+          window.sessionStorage.setItem('lastFavoriteIdsCall', now.toString());
+          
+          if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(() => {
+              loadFavoriteRouteIds();
+            }, { timeout: 2000 }); 
+          } else {
+            setTimeout(() => {
+              loadFavoriteRouteIds();
+            }, 100);
+          }
         }
       };
       

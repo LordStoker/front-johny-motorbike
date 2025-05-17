@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import axios from 'axios';
@@ -43,7 +43,7 @@ export default function NewRuta() {
       }));
     }
   };  // Manejar los cambios en el mapa (coordenadas de la ruta)
-  const handleRouteMapChange = (coordinates) => {
+  const handleRouteMapChange = useCallback((coordinates) => {
     // Evita re-renderizados innecesarios si las coordenadas son iguales
     const current = JSON.stringify(formData.route_map);
     const updated = JSON.stringify(coordinates);
@@ -54,16 +54,18 @@ export default function NewRuta() {
         route_map: coordinates
       }));
     }
-  };  // Manejar la captura del mapa como imagen
-  const handleMapCapture = (imageBase64) => {
-    setFormData(prev => ({
-      ...prev,
-      map_image: imageBase64
-    }));
-  };
-  
-  // Manejar los metadatos calculados de la ruta (distancia, duración, país)
-  const handleRouteMetadataChange = (metadata) => {
+  }, [formData.route_map]);
+    // Manejar la captura del mapa como imagen
+  const handleMapCapture = useCallback((imageBase64) => {
+    if (formData.map_image !== imageBase64) {
+      setFormData(prev => ({
+        ...prev,
+        map_image: imageBase64
+      }));
+    }
+  }, [formData.map_image]);
+    // Manejar los metadatos calculados de la ruta (distancia, duración, país)
+  const handleRouteMetadataChange = useCallback((metadata) => {
     // Actualizar los campos correspondientes
     setFormData(prev => {
       const updates = {};
@@ -76,10 +78,8 @@ export default function NewRuta() {
       // Actualizar la duración si ha cambiado
       if (metadata.duration && (!prev.duration || parseInt(prev.duration) !== metadata.duration)) {
         updates.duration = metadata.duration.toString();
-      }
-      
-      // Buscar el ID del país si se encontró uno
-      if (countries.length > 0) {
+      }        // Buscar el ID del país si se encontró uno
+      if (countries.length > 0 && metadata.country && metadata.country !== 'Detectando...') {
         let countryObject = null;
         
         // Primero intentar encontrar el país por código (más preciso)
@@ -87,34 +87,54 @@ export default function NewRuta() {
           countryObject = countries.find(c => 
             c.code && c.code.toLowerCase() === metadata.countryCode.toLowerCase()
           );
+          
+          // if (countryObject) {
+          //   console.log('País encontrado por código:', countryObject.name);
+          // }
         }
         
         // Si no se encontró por código, intentar por nombre (menos preciso)
         if (!countryObject && metadata.country) {
+          // Evitar procesar si el país está en proceso de detección
+          if (metadata.country === "Detectando..." || metadata.country === "Desconocido") {
+            return prev;
+          }
+          
           // Crear una versión simplificada del nombre para comparar (sin acentos, en minúsculas)
           const normalizedCountryName = metadata.country.toLowerCase()
             .normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Eliminar acentos
+          
+          // console.log('Buscando coincidencia para país:', metadata.country);
             
+          // Tabla de equivalencias para algunos países comunes (ampliada)
+          const countryEquivalents = {
+            'españa': ['spain', 'espana', 'espanha'],
+            'estados unidos': ['united states', 'usa', 'us', 'united states of america', 'estados unidos de america'],
+            'francia': ['france'],
+            'alemania': ['germany', 'deutschland'],
+            'reino unido': ['united kingdom', 'uk', 'great britain', 'england', 'inglaterra'],
+            'italia': ['italy'],
+            'portugal': ['portugal'],
+            'japón': ['japan', 'japon'],
+            'china': ['china'],
+            'méxico': ['mexico', 'mexiko'],
+            'canadá': ['canada'],
+            'brasil': ['brazil', 'brasil'],
+            'argentina': ['argentina'],
+            'colombia': ['colombia'],
+            'australia': ['australia'],
+            'rusia': ['russia', 'russian federation'],
+            'india': ['india']
+          };
+          
           // Buscar coincidencias aproximadas
           countryObject = countries.find(c => {
+            if (!c.name) return false;
+            
             const normalizedName = c.name.toLowerCase()
               .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             
-            // Tabla de equivalencias para algunos países comunes
-            const countryEquivalents = {
-              'españa': ['spain'],
-              'estados unidos': ['united states', 'usa', 'us'],
-              'francia': ['france'],
-              'alemania': ['germany'],
-              'reino unido': ['united kingdom', 'uk', 'great britain'],
-              'italia': ['italy'],
-              'portugal': ['portugal'],
-              'japón': ['japan'],
-              'japom': ['japan'],
-              'china': ['china']
-            };
-            
-            // Verificar equivalencias
+            // Verificar equivalencias exactas
             for (const [key, values] of Object.entries(countryEquivalents)) {
               if (normalizedCountryName === key && values.includes(normalizedName)) {
                 return true;
@@ -124,13 +144,25 @@ export default function NewRuta() {
               }
             }
             
-            return normalizedName.includes(normalizedCountryName) || 
-                   normalizedCountryName.includes(normalizedName);
+            // Verificar contenciones parciales (más flexible)
+            if (normalizedName.includes(normalizedCountryName) || normalizedCountryName.includes(normalizedName)) {
+              return true;
+            }
+            
+            // Verificar coincidencias con un umbral de tolerancia mayor
+            // para países con nombres muy diferentes en distintos idiomas
+            return normalizedName === normalizedCountryName || 
+                   (normalizedCountryName.length > 3 && normalizedName.includes(normalizedCountryName.substring(0, 4))) ||
+                   (normalizedName.length > 3 && normalizedCountryName.includes(normalizedName.substring(0, 4)));
           });
+          
+          if (countryObject) {
+            // console.log('País encontrado por nombre:', countryObject.name);
+          }
         }
         
         if (countryObject && (!prev.country_id || prev.country_id !== countryObject.id.toString())) {
-          // console.log('País encontrado:', countryObject.name);
+          // console.log('País asignado:', countryObject.name);
           updates.country_id = countryObject.id.toString();
         }
       }
@@ -146,7 +178,7 @@ export default function NewRuta() {
         ...updates
       };
     });
-  };
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -226,8 +258,7 @@ export default function NewRuta() {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
           {error}
         </div>
-      )}      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200 text-blue-800">
+      )}      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 border border-gray-200">        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200 text-blue-800">
           <h2 className="text-lg font-semibold flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -235,6 +266,7 @@ export default function NewRuta() {
             ¿Cómo crear una ruta?
           </h2>
           <p className="mt-1">Dibuja tu ruta en el mapa marcando al menos 2 puntos. La distancia, duración y país se completarán automáticamente.</p>
+          <p className="mt-2 text-sm text-blue-600"><strong>Nota:</strong> La detección automática del país puede tardar unos segundos en completarse.</p>
         </div>
         
         {/* Componente de mapa para crear la ruta - Movido a la parte superior */}
@@ -251,9 +283,8 @@ export default function NewRuta() {
             />
           </div>
           
-          <div className="mt-2 space-y-2">
-            {/* Información sobre el país detectado */}
-            {formData.country_id && (
+          <div className="mt-2 space-y-2">            {/* Información sobre el país detectado */}
+            {formData.country_id ? (
               <div className="text-sm bg-blue-50 border border-blue-200 rounded p-2 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -264,7 +295,21 @@ export default function NewRuta() {
                   </span>
                 </span>
               </div>
-            )}
+            ) : formData.route_map?.length >= 2 ? (
+              <div className="text-sm bg-yellow-50 border border-yellow-200 rounded p-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span className="flex items-center">
+                  Detectando país...
+                  <span className="ml-2">
+                    <span className="inline-block w-2 h-2 bg-yellow-600 rounded-full animate-pulse"></span>
+                    <span className="inline-block w-2 h-2 bg-yellow-600 rounded-full animate-pulse mx-1" style={{animationDelay: '0.2s'}}></span>
+                    <span className="inline-block w-2 h-2 bg-yellow-600 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></span>
+                  </span>
+                </span>
+              </div>
+            ) : null}
             
             {/* Número de puntos en el mapa */}
             {formData.route_map && formData.route_map.length > 0 && (
@@ -454,51 +499,22 @@ export default function NewRuta() {
             value={formData.country_id} 
           />
           {getErrorMessage('country_id')}
-        </div>        <div className="mb-6">
-          <label htmlFor="image" className="block text-gray-700 font-bold mb-2 flex items-center">
-            URL de la imagen
-            {formData.map_image && (
-              <span className="ml-2 text-xs font-normal text-green-600 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Imagen del mapa capturada automáticamente
-              </span>
-            )}
-          </label>
+        </div>        {/* Campo de imagen oculto - la imagen se genera automáticamente con geoapify */}
+        <input
+          type="hidden"
+          name="image"
+          value={formData.image}
+          onChange={handleChange}
+        />        {getErrorMessage('image')}
+        
+        {/* Capturamos la imagen del mapa pero no mostramos la vista previa */}
+        {formData.map_image && (
           <input
-            type="url"
-            id="image"
-            name="image"
-            value={formData.image}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 ${
-              validationErrors.image ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="https://ejemplo.com/imagen.jpg (opcional)"
+            type="hidden"
+            name="map_image"
+            value={formData.map_image}
           />
-          {getErrorMessage('image')}
-          <p className="text-gray-500 text-xs mt-1">
-            {formData.map_image ? 
-              "La imagen del mapa se usará por defecto. Puedes introducir una URL alternativa si lo prefieres." : 
-              "Deja este campo vacío para usar una imagen predeterminada"}
-          </p>
-          
-          {/* Vista previa de la imagen del mapa si está disponible */}
-          {formData.map_image && (
-            <div className="mt-3">
-              <p className="text-sm font-medium mb-2">Vista previa de la imagen del mapa:</p>
-              <div className="border rounded overflow-hidden" style={{ maxHeight: '200px' }}>
-                <img 
-                  src={formData.map_image} 
-                  alt="Vista previa del mapa" 
-                  className="w-full object-contain"
-                  style={{ maxHeight: '200px' }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        )}
 
         <div className="flex items-center justify-end gap-4">
           <button

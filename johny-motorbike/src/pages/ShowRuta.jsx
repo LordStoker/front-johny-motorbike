@@ -15,13 +15,24 @@ export default function ShowRuta() {
       setRuta(foundRuta || null)
     }
   }, [routes, id])
-    // Precargamos los IDs de rutas favoritas al renderizar la página
+  // Precargamos los IDs de rutas favoritas al renderizar la página
   useEffect(() => {
     if (user) {
-      loadFavoriteRouteIds();
+      // Creamos un debounce para evitar múltiples llamadas
+      const lastCall = window.sessionStorage.getItem('lastFavoriteIdsCall');
+      const now = Date.now();
+      
+      // Solo permitir una carga cada 30 segundos como máximo
+      if (!lastCall || (now - parseInt(lastCall)) > 30000) {
+        window.sessionStorage.setItem('lastFavoriteIdsCall', now.toString());
+        
+        // Pequeño retraso para evitar bloquear el renderizado inicial
+        setTimeout(() => {
+          loadFavoriteRouteIds();
+        }, 300);
+      }
     }
-    // Quitamos loadFavoriteRouteIds de las dependencias ya que ahora está memoizada con useCallback
-  }, [user])
+  }, [user, loadFavoriteRouteIds])
 
   if (loading) {
     return (

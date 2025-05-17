@@ -299,12 +299,29 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
     }
-  }, [])
-  // --- FAVORITOS ---
+  }, [])  // --- FAVORITOS ---
+  
+  // Referencia para el AbortController actual
+  const currentFavoritesControllerRef = useRef(null);
+  
+  // Estado para controlar si hay una petición de favoritos en curso
+  const [isLoadingFavoriteIds, setIsLoadingFavoriteIds] = useState(false);
   
   // Declaramos loadFavoriteRouteIds primero, antes de checkFavorite
   // Función más ligera para cargar solo los IDs de rutas favoritas
-  const loadFavoriteRouteIds = useCallback(async () => {
+  const loadFavoriteRouteIds = useCallback(async (force = false) => {
+    // Si ya hay una petición en curso y no es forzada, retornamos la promesa actual
+    if (isLoadingFavoriteIds && !force) {
+      // console.log('Ya hay una solicitud de favoritos en curso, omitiendo...');
+      return Promise.resolve(favoriteRouteIds);
+    }
+    
+    // Cancelamos cualquier petición anterior si existe
+    if (currentFavoritesControllerRef.current) {
+      // console.log('Cancelando petición anterior de favoritos');
+      currentFavoritesControllerRef.current.abort();
+      currentFavoritesControllerRef.current = null;
+    }
     if (!user) {
       setFavoriteRouteIds(new Set());
       return Promise.resolve();
@@ -316,18 +333,28 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
       setFavoriteRouteIds(idsFromRoutes);
       return Promise.resolve(idsFromRoutes);
     }
-    
-    try {
+      try {
+      // Marcamos que está cargando
+      setIsLoadingFavoriteIds(true);
+      
       const token = localStorage.getItem('token');
       
       if (!token) {
+        setIsLoadingFavoriteIds(false);
         setFavoriteRouteIds(new Set());
-        return Promise.resolve();
+        return Promise.resolve(new Set());
       }
       
       // Usando AbortController para evitar peticiones colgadas
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // timeout más corto para esta petición ligera
+      currentFavoritesControllerRef.current = controller;
+      
+      const timeoutId = setTimeout(() => {
+        if (controller.signal.aborted === false) {
+          controller.abort();
+          // console.log('Tiempo de espera agotado para petición de favoritos');
+        }
+      }, 8000); // Aumentamos el timeout para dar más tiempo
       
       // Obtener solo los IDs de las rutas favoritas
       const res = await axios.get(`${API_URL}/favorite-route-ids`, {
@@ -336,8 +363,9 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
         },
         signal: controller.signal
       });
-      
-      clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
+      currentFavoritesControllerRef.current = null;
+      setIsLoadingFavoriteIds(false);
       
       if (res.data.success && res.data.data) {
         // Actualizar el Set de IDs
@@ -347,17 +375,22 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
       } else {
         setFavoriteRouteIds(new Set());
         return Promise.resolve(new Set());
-      }
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.error('La petición de IDs de favoritos fue cancelada por timeout');
+      }    } catch (err) {
+      // Limpieza de recursos
+      currentFavoritesControllerRef.current = null;
+      setIsLoadingFavoriteIds(false);
+      
+      // Mejorado para manejar tanto AbortError como CanceledError de Axios
+      if (err.name === 'AbortError' || err.name === 'CanceledError' || (err.code === 'ERR_CANCELED')) {
+        // console.log('Petición de IDs de favoritos cancelada - esto es normal durante la navegación');
       } else {
         console.error('Error al cargar IDs de favoritos:', err);
-      }
-      setFavoriteRouteIds(new Set());
-      return Promise.resolve(new Set());
+      }      // No actualizamos favoriteRouteIds si fue una cancelación para evitar borrar datos existentes
+      if (!(err.name === 'CanceledError' || err.code === 'ERR_CANCELED')) {
+        setFavoriteRouteIds(new Set());
+      }      return Promise.resolve(favoriteRouteIds); // Retornamos los IDs actuales en vez de un set vacío
     }
-  }, [user, favoriteRoutes]);
+  }, [user, favoriteRoutes, favoriteRouteIds, isLoadingFavoriteIds]);
   
   // Verificar si una ruta es favorita - versión altamente optimizada que prioriza el cache local
   const checkFavorite = useCallback(async (routeId) => {
@@ -475,13 +508,29 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
       }
       return isFav; // Devolvemos el estado original
     }
-  };  // Cargar las rutas favoritas del usuario
+  };  // Referencia para controlar las peticiones de rutas favoritas completas
+  const currentFavoritesRoutesControllerRef = useRef(null);
+  
+  // Cargar las rutas favoritas del usuario
   // Usamos useCallback para evitar que la función se recree en cada renderización
   // Retornamos la promesa para poder encadenar acciones
-  const loadFavoriteRoutes = useCallback(async () => {
+  const loadFavoriteRoutes = useCallback(async (force = false) => {
     if (!user) {
       setFavoriteRoutes([]);
       return Promise.resolve(); // Devolvemos una promesa resuelta
+    }
+    
+    // Si ya hay una petición en curso y no es forzada, no iniciamos otra
+    if (loadingFavorites && !force) {
+      // console.log('Ya hay una carga de rutas favoritas en curso, omitiendo...');
+      return Promise.resolve(favoriteRoutes);
+    }
+    
+    // Cancelamos cualquier petición anterior si existe
+    if (currentFavoritesRoutesControllerRef.current) {
+      // console.log('Cancelando petición anterior de rutas favoritas');
+      currentFavoritesRoutesControllerRef.current.abort();
+      currentFavoritesRoutesControllerRef.current = null;
     }
     
     try {
@@ -489,13 +538,19 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
       const token = localStorage.getItem('token');
       
       if (!token) {
+        setLoadingFavorites(false);
         setFavoriteRoutes([]);
         return Promise.resolve();
       }
-      
-      // Usamos AbortController para manejar timeouts
+        // Usamos AbortController para manejar timeouts
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos de timeout
+      currentFavoritesRoutesControllerRef.current = controller;
+      const timeoutId = setTimeout(() => {
+        if (controller.signal.aborted === false) {
+          controller.abort();
+          // console.log('Tiempo de espera agotado para petición de rutas favoritas');
+        }
+      }, 8000); // 8 segundos de timeout
       
       // Usar la ruta específica sin necesidad de depuración
       const res = await axios.get(`${API_URL}/user-favorite-routes`, {
@@ -505,8 +560,9 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
         signal: controller.signal
       });
       
-      // Limpiamos el timeout ya que la petición terminó
+      // Limpiamos el timeout y la referencia
       clearTimeout(timeoutId);
+      currentFavoritesRoutesControllerRef.current = null;
           if (res.data.success) {
         const favoriteData = res.data.data || [];
         setFavoriteRoutes(favoriteData);
@@ -519,35 +575,55 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
         setFavoriteRouteIds(new Set());
       }
       
-      return Promise.resolve(res.data.success ? res.data.data : []);
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.error('La petición de favoritos fue cancelada por timeout');
+      return Promise.resolve(res.data.success ? res.data.data : []);    } catch (err) {
+      // Limpiamos la referencia al controlador
+      currentFavoritesRoutesControllerRef.current = null;
+      
+      if (err.name === 'AbortError' || err.name === 'CanceledError' || (err.code === 'ERR_CANCELED')) {
+        // console.log('La petición de rutas favoritas fue cancelada - esto es normal durante la navegación');
       } else {
         console.error('Error al cargar rutas favoritas:', err);
       }
-      setFavoriteRoutes([]);
-      return Promise.resolve([]);
+      
+      // No actualizamos el estado si fue una cancelación para evitar borrar datos existentes
+      if (!(err.name === 'CanceledError' || err.code === 'ERR_CANCELED')) {
+        setFavoriteRoutes([]);
+      }
+      return Promise.resolve(favoriteRoutes);  // Retornamos las rutas actuales
     } finally {
       setLoadingFavorites(false);
-    }  }, [user]); // Solo se recrea cuando user cambia
-    // Efecto para cargar las rutas favoritas cuando el usuario inicia sesión
+    }  }, [user, favoriteRoutes, loadingFavorites]); // Actualizamos dependencias
+  // Efecto para cargar las rutas favoritas cuando el usuario inicia sesión
   useEffect(() => {
     if (user) {
-      // Primero cargamos solo los IDs (más rápido) para respuesta inmediata
-      loadFavoriteRouteIds()
-        .then(() => {
-          // Luego, en segundo plano, cargamos los datos completos
-          // pero con menor prioridad para no bloquear la UI
-          setTimeout(() => {
-            loadFavoriteRoutes();
-          }, 100);
-        });
+      // Cargamos primero los IDs con una pequeña demora para evitar múltiples llamadas
+      const idTimeoutId = setTimeout(() => {
+        loadFavoriteRouteIds();
+        
+        // Luego, con un retraso mayor, cargamos los datos completos de rutas
+        const routesTimeoutId = setTimeout(() => {
+          if ('requestIdleCallback' in window) {
+            // Cargamos los favoritos completos cuando el navegador esté menos ocupado
+            window.requestIdleCallback(() => {
+              loadFavoriteRoutes();
+            }, { timeout: 3000 });
+          } else {
+            // Fallback para navegadores sin requestIdleCallback
+            setTimeout(() => {
+              loadFavoriteRoutes();
+            }, 500);
+          }
+        }, 1000);
+        
+        return () => clearTimeout(routesTimeoutId);
+      }, 200);
+      
+      return () => clearTimeout(idTimeoutId);
     } else {
       setFavoriteRoutes([]);
       setFavoriteRouteIds(new Set());
     }
-  }, [user]);
+  }, [user, loadFavoriteRouteIds, loadFavoriteRoutes]);
   // Variable para controlar el tiempo de la última carga de favoritos
   const lastFavoritesCheck = useRef(0);
   

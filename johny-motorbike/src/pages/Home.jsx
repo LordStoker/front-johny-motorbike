@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAppContext } from '../context/AppContext'
+import { useMemo } from 'react'
 import backgroundImage from '../assets/johny-motorbike.jpg'
 
 import RutaCard from '../components/RutaCard'
@@ -7,9 +8,22 @@ import RutaCard from '../components/RutaCard'
 export default function Home() {
   const { routes, loading } = useAppContext()
   
-  // Obtener las 3 rutas más populares (para este ejemplo, simplemente tomamos las primeras 3)
-  const popularRoutes = routes.slice(0, 3)
-  
+  // Obtener las 3 rutas mejor puntuadas (ordenadas por rating de mayor a menor)
+  const popularRoutes = useMemo(() => {
+    // Crear una copia de las rutas para no modificar el array original
+    const sortedRoutes = [...routes]
+      // Calcular rating para cada ruta
+      .map(route => ({
+        ...route,
+        calculatedRating: route.totalScore && route.countScore ? route.totalScore / route.countScore : 0
+      }))
+      // Ordenar por rating de mayor a menor
+      .sort((a, b) => b.calculatedRating - a.calculatedRating)
+      // Tomar las 3 primeras
+      .slice(0, 3);
+    
+    return sortedRoutes;
+  }, [routes]);
   return (
     <>
       {/* Hero Section con fondo de imagen */}
@@ -87,19 +101,16 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Sección de rutas populares */}
+      </section>      {/* Sección de rutas mejor valoradas */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-12 text-center text-blue-800">
-            Rutas Populares
+            Mejores Rutas
           </h2>
           
           {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-800 mx-auto"></div>
-              <p className="mt-4 text-gray-700">Cargando rutas populares...</p>
+            <div className="text-center py-8">              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-800 mx-auto"></div>
+              <p className="mt-4 text-gray-700">Cargando las mejores rutas...</p>
             </div>
           ) : (
             <>
@@ -107,10 +118,24 @@ export default function Home() {
                 <p className="text-center text-gray-600 py-8">
                   No hay rutas disponibles actualmente. ¡Sé el primero en crear una!
                 </p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {popularRoutes.map(ruta => (
-                    <RutaCard key={ruta.id} ruta={ruta} className="h-full" />
+              ) : (                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {popularRoutes.map((ruta, index) => (
+                    <div key={ruta.id} className="relative">
+                      {/* Medallero para las top 3 rutas */}
+                      <div className="absolute -top-4 -right-4 z-10">
+                        <div className={`w-16 h-16 flex items-center justify-center rounded-full shadow-lg border-2 
+                          ${index === 0 ? 'bg-yellow-500 border-yellow-600' : 
+                            index === 1 ? 'bg-gray-300 border-gray-400' : 
+                            'bg-amber-700 border-amber-800'}`}>
+                          <div className="text-white font-bold text-xl">
+                            #{index + 1}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Tarjeta de la ruta */}
+                      <RutaCard key={ruta.id} ruta={ruta} className="h-full" />
+                    </div>
                   ))}
                 </div>
               )}

@@ -14,13 +14,7 @@ const MapConfigMessage = () => {
                    apiKey !== 'cdb052cc1e544341a966e8874d12d7ce' &&
                    apiKey.length > 10; // Las API key suelen tener más de 10 caracteres
                    
-    console.log("Validación de API Key:", { 
-      presente: !!apiKey, 
-      valida: isValid,
-      longitud: apiKey ? apiKey.length : 0,
-      key: apiKey ? apiKey.substring(0, 5) + '...' : 'no definida',
-      api: apiKey
-    });
+    
     
     // Verificar con una petición a Geoapify que la API key es válida
     if (isValid) {
@@ -32,7 +26,7 @@ const MapConfigMessage = () => {
           throw new Error('API key no válida');
         })
         .then(() => {
-          console.log('API key de Geoapify verificada correctamente');
+          
           setHasValidApiKey(true);
         })
         .catch(error => {

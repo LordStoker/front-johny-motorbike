@@ -546,20 +546,48 @@ const RutaDetail = ({ ruta: initialRoute }) => {
             <p className="text-gray-600 leading-relaxed">{rutaData.description}</p>
           </div>
           
-          {/* Galería de imágenes */}
-          {rutaData.route_images && rutaData.route_images.length > 1 && (
+          {/* Galería de imágenes */}          {rutaData.route_images && rutaData.route_images.length > 1 && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-800 mb-3">Galería</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {rutaData.route_images.map((image, index) => (
-                  <div key={index} className="rounded-lg overflow-hidden shadow-md h-40">
-                    <img 
-                      src={`${import.meta.env.VITE_API_URL}/storage/${image.url}`}
-                      alt={`${rutaData.name} - Imagen ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    />
-                  </div>
-                ))}
+                {rutaData.route_images.map((image, index) => {
+                  // Usamos un estado local para cada imagen
+                  const [isImgLoading, setIsImgLoading] = useState(true);
+                  const [hasImgError, setHasImgError] = useState(false);
+                  
+                  return (
+                    <div key={index} className="rounded-lg overflow-hidden shadow-md h-40 relative">
+                      {/* Spinner de carga */}
+                      {isImgLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div>
+                        </div>
+                      )}
+                      
+                      {/* Mensaje de error */}
+                      {hasImgError && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-sm text-gray-500">Error al cargar</p>
+                        </div>
+                      )}
+                      
+                      {/* Imagen */}
+                      <img 
+                        src={`${import.meta.env.VITE_API_URL}/storage/${image.url}`}
+                        alt={`${rutaData.name} - Imagen ${index + 1}`}
+                        className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${hasImgError ? 'opacity-0' : ''}`}
+                        onLoad={() => setIsImgLoading(false)}
+                        onError={() => {
+                          setIsImgLoading(false);
+                          setHasImgError(true);
+                        }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

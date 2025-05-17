@@ -19,15 +19,67 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Componente para centrar el mapa en la ruta
-function FitBounds({ routeCoordinates }) {
+function FitBounds({ routeCoordinates, onMapReady }) {
   const map = useMap();
+  // Referencia para llevar control de si el usuario ya interactuó con el mapa
+  const userInteracted = useRef(false);
+  // Referencia para controlar cuando fue la última vez que se hizo fitBounds
+  const lastFitBoundsRef = useRef(0);
+  // Referencia para llevar el último conteo de coordenadas
+  const lastCoordCountRef = useRef(0);
+  
+  // Manejador de eventos para detectar interacción del usuario con el mapa
+  useEffect(() => {
+    const detectUserInteraction = () => {
+      userInteracted.current = true;
+    };
+    
+    // Eventos que indican interacción del usuario con el mapa
+    map.on('dragstart', detectUserInteraction);
+    map.on('zoomstart', detectUserInteraction);
+    
+    return () => {
+      map.off('dragstart', detectUserInteraction);
+      map.off('zoomstart', detectUserInteraction);
+    };
+  }, [map]);
   
   useEffect(() => {
-    if (routeCoordinates.length > 1) { // Solo ajustar cuando hay al menos 2 puntos
+    // Detectar si debemos ajustar la vista según condiciones específicas
+    const shouldFitBounds = () => {
+      const now = Date.now();
+      const timeSinceLastFit = now - lastFitBoundsRef.current;
+      
+      // Casos para ajustar automáticamente:
+      // 1. Se añaden los primeros 2+ puntos (inicio de ruta)
+      // 2. No hay interacción previa del usuario con el mapa
+      // 3. Ha pasado tiempo suficiente desde el último ajuste (para evitar ajustes continuos)
+      // 4. El número de coordenadas cambió significativamente (eliminación o adición de varios puntos)
+      return (
+        (routeCoordinates.length >= 2 && lastCoordCountRef.current < 2) || // Inicio de ruta
+        (!userInteracted.current) || // Usuario no ha interactuado aún
+        (timeSinceLastFit > 3000 && Math.abs(routeCoordinates.length - lastCoordCountRef.current) > 3) // Cambio significativo
+      );
+    };
+    
+    // Solo ajustar cuando hay al menos 2 puntos Y cumplimos los criterios
+    if (routeCoordinates.length > 1 && shouldFitBounds()) {
       const bounds = L.latLngBounds(routeCoordinates);
       map.fitBounds(bounds, { padding: [50, 50] });
+      lastFitBoundsRef.current = Date.now(); // Registrar tiempo de este ajuste
     }
-  }, [map, routeCoordinates]);
+    
+    // Actualizar referencia del conteo de coordenadas
+    lastCoordCountRef.current = routeCoordinates.length;
+    
+    // Notificar que el mapa está listo
+    if (onMapReady) {
+      // Esperar un poco para asegurar que los tiles se hayan cargado
+      setTimeout(() => {
+        onMapReady();
+      }, 300);
+    }
+  }, [map, routeCoordinates, onMapReady]);
 
   return null;
 }
@@ -112,6 +164,7 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
   const [country, setCountry] = useState(null);
   const [countryInfo, setCountryInfo] = useState(null);
   const [countryDetectionStatus, setCountryDetectionStatus] = useState('idle'); // idle, detecting, detected, error
+  const [mapLoaded, setMapLoaded] = useState(false); // Estado para el spinner del mapa
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const isUpdatingMetadata = useRef(false);
@@ -438,6 +491,16 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
     <div className="route-map-container relative" 
          style={{ height: editable ? '500px' : '400px', width: '100%' }}
          ref={mapContainerRef}>
+      {/* Spinner de carga para el mapa */}
+      {!mapLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-50">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mb-2"></div>
+            <p className="text-gray-600 font-medium">Cargando mapa...</p>
+          </div>
+        </div>
+      )}
+      
       {/* Botón flotante para borrar ruta (visible cuando hay puntos) */}
       {editable && coordinates.length > 0 && (
         <div className="absolute top-3 right-3 z-40">
@@ -461,6 +524,7 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
         style={{ height: '100%', width: '100%', zIndex: 30 }} // z-index menor que el header
         className="z-30" // Reforzamos con una clase
         ref={mapRef}
+        whenReady={() => setMapLoaded(true)}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -492,9 +556,11 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
             title={`Punto ${idx + 1}${editable ? " - Click para eliminar" : ""}`}
           />
         ))}
-        
-        {/* Componente para ajustar la vista a los límites de la ruta */}
-        <FitBounds routeCoordinates={coordinates} />
+          {/* Componente para ajustar la vista a los límites de la ruta */}
+        <FitBounds 
+          routeCoordinates={coordinates} 
+          onMapReady={() => setMapLoaded(true)}
+        />
         
         {/* Componente para gestionar eventos del mapa */}
         <MapEvents onMapClick={handleMapClick} editable={editable} />

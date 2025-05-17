@@ -14,6 +14,9 @@ const CountrySelect = ({ countries, selectedCountries, onChange }) => {
   const selectRef = useRef(null);
   // Estado para controlar el portal del dropdown
   const [portalContainer, setPortalContainer] = useState(null);
+  // Estado para controlar la carga de las imágenes de banderas
+  const [flagsLoading, setFlagsLoading] = useState({});
+  const [flagsError, setFlagsError] = useState({});
 
   // Efecto para mejorar la visualización de banderas en el select
   useEffect(() => {
@@ -362,13 +365,45 @@ const CountrySelect = ({ countries, selectedCountries, onChange }) => {
         {/* Icono de bandera para el país seleccionado */}
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           {selectedCountries.length === 1 && countries ? (
-            <img
-              src={`https://flagcdn.com/16x12/${getFlagCode(
-                countries.find(c => c.id === selectedCountries[0])?.name || ''
-              )}.png`}
-              alt="Bandera de país"
-              className="mr-2 h-4"
-            />
+            <div className="relative mr-2 h-4 w-5">
+              {/* Spinner de carga */}
+              {flagsLoading[selectedCountries[0]] && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-500"></div>
+                </div>
+              )}
+              
+              {/* Icono de error */}
+              {flagsError[selectedCountries[0]] && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg className="h-3 w-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+              )}
+              
+              <img
+                src={`https://flagcdn.com/16x12/${getFlagCode(
+                  countries.find(c => c.id === selectedCountries[0])?.name || ''
+                )}.png`}
+                alt="Bandera de país"
+                className={`h-4 w-full object-cover ${flagsLoading[selectedCountries[0]] || flagsError[selectedCountries[0]] ? 'opacity-0' : ''}`}
+                onLoad={() => {
+                  const newFlagsLoading = {...flagsLoading};
+                  newFlagsLoading[selectedCountries[0]] = false;
+                  setFlagsLoading(newFlagsLoading);
+                }}
+                onError={() => {
+                  const newFlagsLoading = {...flagsLoading};
+                  newFlagsLoading[selectedCountries[0]] = false;
+                  setFlagsLoading(newFlagsLoading);
+                  
+                  const newFlagsError = {...flagsError};
+                  newFlagsError[selectedCountries[0]] = true;
+                  setFlagsError(newFlagsError);
+                }}
+              />
+            </div>
           ) : (
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -407,11 +442,24 @@ const CountrySelect = ({ countries, selectedCountries, onChange }) => {
                   className={`py-1 cursor-pointer hover:bg-gray-100 px-3 flex items-center ${selectedCountries.includes(country.id) ? 'bg-blue-50' : ''}`}
                   onClick={() => handleSelectCountry(country.id)}
                 >
-                  <img
-                    src={`https://flagcdn.com/16x12/${flagCode}.png`}
-                    alt={`Bandera de ${country.name}`}
-                    className="h-3 w-4 object-cover"
-                  />
+                  {/* Imagen de la bandera con manejo de carga y error */}
+                  <div className="relative w-4 h-3 mr-2">
+                    {flagsLoading[country.id] && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="animate-spin h-3 w-3 text-gray-400" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" fill="none" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4zm16 0a8 8 0 01-8 8v-4a4 4 0 004-4h4z"></path>
+                        </svg>
+                      </div>
+                    )}
+                    <img
+                      src={`https://flagcdn.com/16x12/${flagCode}.png`}
+                      alt={`Bandera de ${country.name}`}
+                      className={`h-3 w-4 object-cover ${flagsError[country.id] ? 'hidden' : ''}`}
+                      onLoad={() => setFlagsLoading(prev => ({ ...prev, [country.id]: false }))}
+                      onError={() => setFlagsError(prev => ({ ...prev, [country.id]: true }))}
+                    />
+                  </div>
                   <span className="ml-2">{country.name}</span>
                 </div>
               );

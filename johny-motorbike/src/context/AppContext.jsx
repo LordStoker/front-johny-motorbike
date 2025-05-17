@@ -617,11 +617,15 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
         
         return () => clearTimeout(routesTimeoutId);
       }, 200);
-      
-      return () => clearTimeout(idTimeoutId);
+          return () => clearTimeout(idTimeoutId);
     } else {
-      setFavoriteRoutes([]);
-      setFavoriteRouteIds(new Set());
+      // Verificar si ya están vacíos antes de establecer nuevos valores para evitar re-renderizados
+      if (favoriteRoutes.length > 0) {
+        setFavoriteRoutes([]);
+      }
+      if (favoriteRouteIds.size > 0) {
+        setFavoriteRouteIds(new Set());
+      }
     }
   }, [user, loadFavoriteRouteIds, loadFavoriteRoutes]);
   // Variable para controlar el tiempo de la última carga de favoritos

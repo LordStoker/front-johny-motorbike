@@ -16,7 +16,7 @@ npm install
 ```
 
 3. Configura las variables de entorno:
-   - Copia el archivo `.env` a `.env.local`
+   - Copia el archivo `.env`
    - Actualiza las variables según tu entorno
 
 ## Configuración de mapas

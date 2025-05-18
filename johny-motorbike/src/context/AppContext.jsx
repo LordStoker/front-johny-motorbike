@@ -799,9 +799,9 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
       setShowAuthModal(false)
       setIsClosing(false)
     }, 300)
-  }, [])
-  // Valores a compartir en el contexto
+  }, [])  // Valores a compartir en el contexto
   const contextValue = {
+    API_URL, // Exponemos la URL de la API para usarla en componentes
     routes,
     difficulties,
     landscapes,

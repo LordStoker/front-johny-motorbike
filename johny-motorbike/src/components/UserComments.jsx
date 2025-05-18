@@ -6,9 +6,10 @@ import StarRating from './StarRating';
 /**
  * Componente para mostrar los comentarios realizados por un usuario
  * @param {Object} props
- * @param {Object} props.userId - ID del usuario
+ * @param {number} props.userId - ID del usuario
+ * @param {boolean} props.isPublic - Indica si estamos en un perfil público o personal
  */
-const UserComments = ({ userId }) => {
+const UserComments = ({ userId, isPublic = false }) => {
   const { getUserComments } = useAppContext();
     // Estados para los comentarios
   const [comments, setComments] = useState([]);
@@ -140,9 +141,10 @@ const UserComments = ({ userId }) => {
   };
   // Envolver el renderizado en un try/catch para capturar errores
   try {
-    return (
-      <div className="bg-white shadow-md rounded-lg p-6 mt-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Mis Comentarios ({totalComments})</h2>
+    return (      <div className="bg-white shadow-md rounded-lg p-6 mt-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          {isPublic ? 'Comentarios' : 'Mis Comentarios'} ({totalComments})
+        </h2>
         
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
@@ -161,9 +163,16 @@ const UserComments = ({ userId }) => {
         <div className="text-center py-8">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-          </svg>
-          <p className="text-gray-500 italic">Aún no has realizado ningún comentario.</p>
-          <p className="text-gray-400 text-sm mt-2">Cuando comentes en rutas, aparecerán aquí.</p>
+          </svg>          <p className="text-gray-500 italic">
+            {isPublic 
+              ? 'Este usuario aún no ha realizado ningún comentario.' 
+              : 'Aún no has realizado ningún comentario.'}
+          </p>
+          <p className="text-gray-400 text-sm mt-2">
+            {isPublic 
+              ? 'Cuando el usuario comente en rutas, aparecerán aquí.'
+              : 'Cuando comentes en rutas, aparecerán aquí.'}
+          </p>
         </div>
       ) : (
         <ul className="space-y-6">
@@ -242,8 +251,9 @@ const UserComments = ({ userId }) => {
   } catch (renderError) {    // Reducimos detalle del log para evitar saturación
     console.error('Error en renderizado de componente');
     return (
-      <div className="bg-white shadow-md rounded-lg p-6 mt-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Mis Comentarios</h2>
+      <div className="bg-white shadow-md rounded-lg p-6 mt-6">        <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          {isPublic ? 'Comentarios' : 'Mis Comentarios'}
+        </h2>
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
           <span className="block font-bold">Error al cargar comentarios</span>
           <span className="block">Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde.</span>

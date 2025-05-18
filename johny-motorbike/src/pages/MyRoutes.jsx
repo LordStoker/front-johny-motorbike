@@ -37,7 +37,7 @@ export default function MyRoutes() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-blue-800 mb-6">Mis Rutas</h1>
+      <h1 className="text-3xl font-bold text-blue-800 mb-6">Rutas personalizadas</h1>
       
       {showRefreshIndicator && (
         <div className="flex justify-center mb-6">

@@ -58,7 +58,7 @@ export default function FavoriteRoutes() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-blue-800">Mis Rutas Favoritas</h1>
+        <h1 className="text-3xl font-bold text-blue-800">Rutas Favoritas</h1>
         
         {/* Indicador de actualización */}
         {showRefreshIndicator && (

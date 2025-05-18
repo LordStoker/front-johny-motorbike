@@ -203,9 +203,39 @@ const UserComments = ({ userId, isPublic = false }) => {
                       </div>
                     ) : (
                       <p className="text-gray-500 italic mb-3">Ruta no disponible</p>
-                    )}
-                    <p className="text-gray-600 font-medium">Comentario </p>
+                    )}                    <p className="text-gray-600 font-medium">Comentario </p>
                     <p className="text-gray-700">{comment.comment || 'Sin comentario'}</p>
+                    
+                    {/* Mostrar las imágenes del comentario si existen */}
+                    {comment.comment_images && comment.comment_images.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-gray-600 font-medium">Imágenes</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {comment.comment_images.map((image, index) => (                            <div 
+                              key={index} 
+                              className="relative w-24 h-24 border border-gray-200 rounded overflow-hidden cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (image.url) {
+                                  window.open(image.url, '_blank');
+                                }
+                              }}
+                              title="Clic para ver imagen completa"
+                            ><img 
+                                src={image.url} 
+                                alt={`Imagen ${index + 1} de comentario`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  // Usar una URL absoluta para la imagen por defecto
+                                  e.target.src = `${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/src/assets/default-route-image.jpg`;
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </li>

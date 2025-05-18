@@ -102,6 +102,8 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
   const [newComment, setNewComment] = useState('');
   const [rating, setRating] = useState(5);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [commentImages, setCommentImages] = useState([]);
+  const [previewImages, setPreviewImages] = useState([]);
   
   // Referencia para implementar infinite scroll
   const observerTarget = useRef(null);
@@ -191,7 +193,49 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
       setIsLoadingComments(false);
     }
   }, [ruta?.id]);
+    // Función para manejar la selección de imágenes
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Limitar a un máximo de 3 imágenes
+    if (files.length + previewImages.length > 3) {
+      alert('Máximo 3 imágenes permitidas');
+      return;
+    }
+    
+    // Validar tamaño y tipo de archivos
+    const validFiles = files.filter(file => {
+      const isValidSize = file.size <= 2 * 1024 * 1024; // 2MB máximo
+      const isValidType = ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type);
+      
+      if (!isValidSize) {
+        alert(`El archivo ${file.name} excede el tamaño máximo de 2MB`);
+      }
+      if (!isValidType) {
+        alert(`El archivo ${file.name} no es un formato válido. Use JPG o PNG`);
+      }
+      
+      return isValidSize && isValidType;
+    });
+    
+    // Actualizar el estado de las imágenes seleccionadas
+    setCommentImages(prev => [...prev, ...validFiles]);
+    
+    // Crear URLs para la previsualización
+    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+    setPreviewImages(prev => [...prev, ...newPreviews]);
+  };
   
+  // Función para eliminar una imagen seleccionada
+  const handleRemoveImage = (index) => {
+    // Liberar URL de objeto para evitar pérdidas de memoria
+    URL.revokeObjectURL(previewImages[index]);
+    
+    // Eliminar la imagen del estado
+    setPreviewImages(prev => prev.filter((_, i) => i !== index));
+    setCommentImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   // Función para enviar un nuevo comentario
   const handleSubmitComment = async (e) => {
     e.preventDefault();
@@ -203,30 +247,31 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
     
     if (!newComment.trim() || rating < 1 || rating > 5) return;
     
-    setIsSubmittingComment(true);
-      try {
+    setIsSubmittingComment(true);      try {
+      // Crear una nueva instancia de FormData para enviar datos y archivos
+      const formData = new FormData();
+      formData.append('comment', newComment);
+      formData.append('score', rating);
+      formData.append('route_id', ruta.id);
+      
+      // Añadir las imágenes si hay alguna
+      if (commentImages.length > 0) {
+        commentImages.forEach((image, index) => {
+          formData.append(`images[]`, image);
+        });
+      }
+      
       // Usar la función auxiliar para construir la URL
       const url = buildApiUrl('comment');
-      
-      
-      // console.log('Datos del comentario:', {
-      //   comment: newComment,
-      //   score: rating,
-      //   route_id: ruta.id
-      // });
       
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // No incluimos 'Content-Type': 'multipart/form-data' porque fetch lo hace automáticamente al usar FormData
         },
-        body: JSON.stringify({
-          comment: newComment,
-          score: rating,
-          route_id: ruta.id
-        })
+        body: formData
       });
       
       // Verificar el estado de la respuesta antes de intentar procesar el cuerpo
@@ -244,10 +289,15 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
         console.error('Error en la respuesta:', data);
         throw new Error(data.message || 'Error al enviar el comentario');
       }
-      
-      // Resetear el formulario
+        // Resetear el formulario completamente
       setNewComment('');
       setRating(5);
+      
+      // Limpiar las imágenes seleccionadas
+      // Liberar las URLs de objetos para evitar pérdidas de memoria
+      previewImages.forEach(url => URL.revokeObjectURL(url));
+      setPreviewImages([]);
+      setCommentImages([]);
       
       // Recargar los comentarios para mostrar el nuevo
       loadComments(1, true);
@@ -390,8 +440,7 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
         </svg>
         Comentarios
       </h2>
-      
-      {/* Formulario para añadir comentario */}
+        {/* Formulario para añadir comentario */}
       <div className="mb-8 bg-gray-50 rounded-lg p-6 border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Deja un comentario</h3>
         <form onSubmit={handleSubmitComment}>
@@ -409,6 +458,50 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
               required
             ></textarea>
           </div>
+          
+          {/* Sección para carga de imágenes */}
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2">Añadir imágenes (opcional):</label>
+            <div className="flex flex-wrap gap-2">
+              {/* Vista previa de imágenes seleccionadas */}
+              {previewImages.map((preview, index) => (
+                <div key={index} className="relative w-24 h-24 bg-gray-100 rounded border border-gray-300">
+                  <img 
+                    src={preview} 
+                    alt={`Previsualización ${index + 1}`}
+                    className="w-full h-full object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              
+              {/* Botón para añadir imágenes, solo mostrar si hay menos de 3 */}
+              {previewImages.length < 3 && (
+                <label className="w-24 h-24 flex items-center justify-center border border-dashed border-gray-400 rounded cursor-pointer hover:bg-gray-100 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/jpeg, image/png"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    multiple={previewImages.length < 2} // Permitir múltiples si hay espacio
+                  />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </label>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Máximo 3 imágenes (JPG, PNG). Tamaño máximo: 2MB por imagen</p>
+          </div>
+          
           <div className="flex justify-end">
             <button
               type="submit"
@@ -486,10 +579,37 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
                         <span className="mx-2 text-gray-400">•</span>
                         <span className="text-sm text-gray-500">
                           {formatDate(comment.created_at)}
-                        </span>
-                      </div>
+                        </span>                      </div>
                       <RatingStars score={comment.score} />
                       <p className="mt-1 text-gray-600">{comment.comment}</p>
+                      
+                      {/* Mostrar las imágenes del comentario si existen */}
+                      {comment.comment_images && comment.comment_images.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {comment.comment_images.map((image, index) => (                            <div 
+                              key={index} 
+                              className="relative w-24 h-24 border border-gray-200 rounded overflow-hidden cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (image.url) {
+                                  window.open(image.url, '_blank');
+                                }
+                              }}
+                              title="Clic para ver imagen completa"
+                            ><img 
+                                src={image.url} 
+                                alt={`Imagen ${index + 1} de comentario`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  // Usar una URL absoluta para la imagen por defecto
+                                  e.target.src = `${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/src/assets/default-route-image.jpg`;
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 

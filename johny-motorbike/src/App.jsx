@@ -14,6 +14,7 @@ import ResetPassword from './pages/auth/ResetPassword'
 import Profile from './pages/user/Profile'
 import ChangePassword from './pages/user/ChangePassword'
 import FavoriteRoutes from './pages/FavoriteRoutes'
+import MyRoutes from './pages/MyRoutes'
 import { AppProvider } from './context/AppContext'
 import MapConfigMessage from './components/MapConfigMessage'
 
@@ -33,10 +34,10 @@ export default function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/perfil" element={<Profile />} />
+                <Route path="/reset-password" element={<ResetPassword />} />                <Route path="/perfil" element={<Profile />} />
                 <Route path="/cambiar-password" element={<ChangePassword />} />
                 <Route path="/favoritos" element={<FavoriteRoutes />} />
+                <Route path="/mis-rutas" element={<MyRoutes />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </Layout>

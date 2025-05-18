@@ -1,5 +1,6 @@
+// filepath: f:\React\front-johny-motorbike\johny-motorbike\src\components\RouteComments.jsx
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 
 /**
@@ -119,7 +120,9 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
       setShowLoginModal(false);
       setIsClosing(false);
     }, 300);
-  };  // Función para cargar comentarios desde la API
+  };  
+  
+  // Función para cargar comentarios desde la API
   const loadComments = useCallback(async (page = 1, reset = false) => {
     if (!ruta?.id || isLoadingComments) return;
     
@@ -260,7 +263,8 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
       setIsSubmittingComment(false);
     }
   };
-    // Función para eliminar un comentario
+  
+  // Función para eliminar un comentario
   const deleteComment = async (commentId) => {
     if (!user) {
       openModal();
@@ -421,7 +425,8 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
         </form>
       </div>
         {/* Lista de comentarios */}
-      <div className="space-y-6">      {!isApiAvailable ? (
+      <div className="space-y-6">      
+      {!isApiAvailable ? (
           <div className="p-4 bg-yellow-100 border border-yellow-300 rounded-md">
             <h3 className="font-semibold text-yellow-800 mb-2">Problemas de conexión</h3>
             <p className="text-yellow-700">
@@ -467,7 +472,16 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
                     <div className="ml-4">
                       <div className="flex items-center">
                         <h4 className="font-medium text-gray-800">
-                          {comment.user?.name || 'Usuario anónimo'}
+                          {comment.user_id ? (
+                            <Link
+                              to={`/usuarios/${comment.user_id}`}
+                              className="hover:text-blue-700 hover:underline transition-colors"
+                            >
+                              {comment.user?.name || 'Usuario anónimo'}
+                            </Link>
+                          ) : (
+                            comment.user?.name || 'Usuario anónimo'
+                          )}
                         </h4>
                         <span className="mx-2 text-gray-400">•</span>
                         <span className="text-sm text-gray-500">

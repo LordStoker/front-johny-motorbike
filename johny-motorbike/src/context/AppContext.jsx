@@ -190,7 +190,52 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
     } finally {
       setAuthLoading(false);
     }
-  }
+  }  // Obtener comentarios del usuario - memoizado con useCallback para evitar rerenderizados
+  const getUserComments = useCallback(async (userId, page = 1, perPage = 5) => {
+    try {
+      // Eliminamos logs para evitar saturar la consola
+      
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`${API_URL}/users/${userId}/comments`, {
+        headers,
+        params: { page, perPage }
+      });
+      
+      // Validación adicional de la estructura de datos
+      if (!response.data) {
+        throw new Error('Respuesta vacía del servidor');
+      }
+      
+      // Estructurar correctamente la respuesta antes de devolverla
+      return {
+        success: response.data.success || false,
+        data: Array.isArray(response.data.data) ? response.data.data : [],
+        pagination: {
+          current_page: response.data.pagination?.current_page || 1,
+          last_page: response.data.pagination?.last_page || 1,
+          per_page: response.data.pagination?.per_page || perPage,
+          total: response.data.pagination?.total || 0
+        }
+      };    } catch (err) {
+      // Simplificamos el mensaje de error para evitar saturar la consola
+      console.error('Error al obtener comentarios del usuario');
+      
+      // En lugar de propagar el error, devolvemos un objeto con estructura consistente
+      return {
+        success: false,
+        data: [],
+        pagination: {
+          current_page: 1,
+          last_page: 1,
+          per_page: perPage,
+          total: 0
+        },
+        error: 'Error al cargar los comentarios'
+      };
+    }
+  }, []);
 
   // Actualizar datos del perfil del usuario
   const updateProfile = async (userId, data) => {
@@ -755,7 +800,6 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
       setIsClosing(false)
     }, 300)
   }, [])
-
   // Valores a compartir en el contexto
   const contextValue = {
     routes,
@@ -778,7 +822,8 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
     sendPasswordResetLink,
     resetPassword,
     updateProfile,
-    changePassword,    
+    changePassword,
+    getUserComments,
     logout,
     favoriteRoutes,
     loadingFavorites,

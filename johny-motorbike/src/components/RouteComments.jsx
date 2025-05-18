@@ -588,19 +588,24 @@ const RouteComments = ({ ruta, onCommentAdded }) => {
                         <div className="mt-3 flex flex-wrap gap-2">
                           {comment.comment_images.map((image, index) => (                            <div 
                               key={index} 
-                              className="relative w-24 h-24 border border-gray-200 rounded overflow-hidden cursor-pointer"
-                              onClick={(e) => {
+                              className="relative w-24 h-24 border border-gray-200 rounded overflow-hidden cursor-pointer"                              onClick={(e) => {
                                 e.preventDefault();
                                 if (image.url) {
-                                  window.open(image.url, '_blank');
+                                  // Construir la URL completa para ver la imagen
+                                  const fullImageUrl = image.url.startsWith('http') 
+                                    ? image.url 
+                                    : `${import.meta.env.VITE_API_URL.replace('/api', '')}/storage/comment_images/${image.url.split('/').pop()}`;
+                                  window.open(fullImageUrl, '_blank');
                                 }
                               }}
                               title="Clic para ver imagen completa"
                             ><img 
-                                src={image.url} 
-                                alt={`Imagen ${index + 1} de comentario`}
+                                src={image.url.startsWith('http') 
+                                    ? image.url 
+                                    : `${import.meta.env.VITE_API_URL.replace('/api', '')}/storage/comment_images/${image.url.split('/').pop()}`}                                alt={`Imagen ${index + 1} de comentario`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
+                                  console.log('Error cargando imagen:', image.url);
                                   e.target.onerror = null;
                                   // Usar una URL absoluta para la imagen por defecto
                                   e.target.src = `${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/src/assets/default-route-image.jpg`;

@@ -79,7 +79,7 @@ const FilterBar = ({ onFilterChange }) => {
       setSelectedItems([...selectedItems, item]);
     }
   };
-  // Utilizamos el componente RangeSlider importado en lugar de definirlo aquí
+ 
   // Componente para filtros de selección múltiple con iconos
   const MultiSelect = ({ title, items, selectedItems, toggleItem }) => {
     // Usar difficultyIcons para el título "Dificultad"
@@ -146,7 +146,7 @@ const FilterBar = ({ onFilterChange }) => {
         </div>
       </div>
     );
-  };// Ya no necesitamos definir RatingFilter aquí ya que usamos el componente importado
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -204,7 +204,8 @@ const FilterBar = ({ onFilterChange }) => {
       {/* Filtros expandibles */}
       <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>            <RangeSlider
+          <div>            
+            <RangeSlider
               min={0}
               max={MAX_DISTANCE}
               value={distanceRange}

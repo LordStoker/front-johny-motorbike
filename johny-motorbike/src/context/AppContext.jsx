@@ -25,9 +25,13 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
   const [favoriteRouteIds, setFavoriteRouteIds] = useState(new Set()) // Set para búsqueda O(1)
   const [loadingFavorites, setLoadingFavorites] = useState(false)
   
+  // --- AUTENTICACIÓN MODAL ---
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+  
   // --- NOTIFICACIONES ---
   const [notification, setNotification] = useState(null)
-  
   // Función para mostrar una notificación
   const showNotification = (message, type = 'success', duration = 3000) => {
     setNotification({ message, type, id: Date.now() })
@@ -734,7 +738,24 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
   // Cargar datos iniciales cuando el componente se monta
   useEffect(() => {
     loadInitialData()
+  }, [])  // Función para mostrar el modal de autenticación
+  const showAuthRequiredModal = useCallback(() => {
+    setShowAuthModal(true)
+    setTimeout(() => {
+      setModalVisible(true)
+    }, 10)
   }, [])
+  
+  // Función para cerrar el modal de autenticación con animación
+  const closeAuthModal = useCallback(() => {
+    setIsClosing(true)
+    setModalVisible(false)
+    setTimeout(() => {
+      setShowAuthModal(false)
+      setIsClosing(false)
+    }, 300)
+  }, [])
+
   // Valores a compartir en el contexto
   const contextValue = {
     routes,
@@ -757,7 +778,8 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
     sendPasswordResetLink,
     resetPassword,
     updateProfile,
-    changePassword,    logout,
+    changePassword,    
+    logout,
     favoriteRoutes,
     loadingFavorites,
     checkFavorite,
@@ -766,7 +788,13 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
     loadFavoriteRouteIds,
     favoriteRouteIds,
     notification,
-    showNotification
+    showNotification,
+    // Modal de autenticación
+    showAuthModal,
+    modalVisible,
+    isClosing,
+    showAuthRequiredModal,
+    closeAuthModal
   }
 
   return (

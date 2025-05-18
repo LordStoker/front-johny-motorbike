@@ -4,7 +4,7 @@ import { IoSkullSharp } from "react-icons/io5";
 import { LuBaby } from "react-icons/lu";
 import { FaHillRockslide } from "react-icons/fa6";
 import { AiFillThunderbolt } from "react-icons/ai";
-import { BiSolidHot, BiSolidCool } from "react-icons/bi";
+import { BiSolidHot } from "react-icons/bi";
 
 
 /**

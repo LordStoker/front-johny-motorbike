@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import axios from 'axios';
 import RouteMap from '../components/RouteMap';
@@ -7,10 +7,19 @@ import RouteMap from '../components/RouteMap';
 // URL base de la API
 const API_URL = 'http://johny-motorbike.test/api';
 
-export default function NewRuta() {
-  const navigate = useNavigate();
-  const { difficulties, terrains, landscapes, countries, reloadResource, showNotification } = useAppContext();
-    const [formData, setFormData] = useState({
+export default function NewRuta() {  const navigate = useNavigate();
+  const { user, difficulties, terrains, landscapes, countries, reloadResource, showNotification, showAuthRequiredModal } = useAppContext();// Ya no necesitamos estos estados porque usamos el modal global
+  // Verificar si el usuario está autenticado al cargar el componente
+  useEffect(() => {
+    if (!user) {
+      // Si no está autenticado, navegar a la página principal
+      navigate('/');
+      // Mostrar el modal de autenticación
+      showAuthRequiredModal();
+    }
+  }, [user, navigate, showAuthRequiredModal]);
+    
+  const [formData, setFormData] = useState({
     name: '',
     description: '',
     distance: '',
@@ -22,12 +31,11 @@ export default function NewRuta() {
     landscape_id: '',
     country_id: '',
     route_map: [] // Array de coordenadas para la ruta en el mapa
-  });
-  
+  });  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -42,7 +50,9 @@ export default function NewRuta() {
         [name]: null
       }));
     }
-  };  // Manejar los cambios en el mapa (coordenadas de la ruta)
+  };  
+  
+  // Manejar los cambios en el mapa (coordenadas de la ruta)
   const handleRouteMapChange = useCallback((coordinates) => {
     // Evita re-renderizados innecesarios si las coordenadas son iguales
     const current = JSON.stringify(formData.route_map);
@@ -55,7 +65,8 @@ export default function NewRuta() {
       }));
     }
   }, [formData.route_map]);
-    // Manejar la captura del mapa como imagen
+  
+  // Manejar la captura del mapa como imagen
   const handleMapCapture = useCallback((imageBase64) => {
     if (formData.map_image !== imageBase64) {
       setFormData(prev => ({
@@ -64,7 +75,8 @@ export default function NewRuta() {
       }));
     }
   }, [formData.map_image]);
-    // Manejar los metadatos calculados de la ruta (distancia, duración, país)
+  
+  // Manejar los metadatos calculados de la ruta (distancia, duración, país)
   const handleRouteMetadataChange = useCallback((metadata) => {
     // Actualizar los campos correspondientes
     setFormData(prev => {
@@ -78,7 +90,9 @@ export default function NewRuta() {
       // Actualizar la duración si ha cambiado
       if (metadata.duration && (!prev.duration || parseInt(prev.duration) !== metadata.duration)) {
         updates.duration = metadata.duration.toString();
-      }        // Buscar el ID del país si se encontró uno
+      }
+      
+      // Buscar el ID del país si se encontró uno
       if (countries.length > 0 && metadata.country && metadata.country !== 'Detectando...') {
         let countryObject = null;
         
@@ -179,6 +193,7 @@ export default function NewRuta() {
       };
     });
   });
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -218,7 +233,9 @@ export default function NewRuta() {
         terrain_id: parseInt(formData.terrain_id),
         landscape_id: parseInt(formData.landscape_id),
         country_id: parseInt(formData.country_id)
-      };      // Priorizar la imagen del mapa, si no está disponible usar la URL externa
+      };
+      
+      // Priorizar la imagen del mapa, si no está disponible usar la URL externa
       if (formData.map_image) {
         dataToSend.image = formData.map_image;
       } else if (formData.image && formData.image.trim()) {
@@ -235,7 +252,8 @@ export default function NewRuta() {
       const response = await axios.post(`${API_URL}/route`, dataToSend);
       
       // console.log('Respuesta del servidor:', response.data);
-        // Recargar las rutas en el contexto global
+      
+      // Recargar las rutas en el contexto global
       await reloadResource('route');
       
       // Mostrar notificación de éxito
@@ -261,6 +279,7 @@ export default function NewRuta() {
       setIsLoading(false);
     }
   };
+    // Ya no necesitamos esta función porque usamos el modal global del contexto
 
   // Función auxiliar para mostrar errores de validación
   const getErrorMessage = (fieldName) => {
@@ -277,7 +296,10 @@ export default function NewRuta() {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
           {error}
         </div>
-      )}      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 border border-gray-200">        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200 text-blue-800">
+      )}
+      
+      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200 text-blue-800">
           <h2 className="text-lg font-semibold flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -285,14 +307,14 @@ export default function NewRuta() {
             ¿Cómo crear una ruta?
           </h2>
           <p className="mt-1">Dibuja tu ruta en el mapa marcando al menos 2 puntos. La distancia, duración y país se completarán automáticamente.</p>
-          <p className="mt-2 text-sm text-blue-600"><strong>Nota:</strong> La detección automática del país puede tardar unos segundos en completarse.</p>
         </div>
         
         {/* Componente de mapa para crear la ruta - Movido a la parte superior */}
         <div className="mb-6">
           <label className="block text-gray-700 font-bold mb-2">
             Dibuja tu Ruta en el Mapa
-          </label>          <div className={`border ${validationErrors.route_map ? 'border-red-500' : 'border-gray-300'} rounded-lg overflow-hidden transition-all duration-300 ${validationErrors.route_map ? 'shadow-md shadow-red-200' : ''}`}>
+          </label>
+          <div className={`border ${validationErrors.route_map ? 'border-red-500' : 'border-gray-300'} rounded-lg overflow-hidden transition-all duration-300 ${validationErrors.route_map ? 'shadow-md shadow-red-200' : ''}`}>
             <RouteMap 
               editable={true} 
               onChange={handleRouteMapChange}
@@ -302,7 +324,8 @@ export default function NewRuta() {
             />
           </div>
           
-          <div className="mt-2 space-y-2">{/* Información sobre el país detectado */}
+          <div className="mt-2 space-y-2">
+            {/* Información sobre el país detectado */}
             {formData.country_id ? (
               <div className="text-sm bg-blue-50 border border-blue-200 rounded p-2 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -329,7 +352,8 @@ export default function NewRuta() {
                 </span>
               </div>
             ) : null}
-              {/* Número de puntos en el mapa */}
+            
+            {/* Número de puntos en el mapa */}
             {formData.route_map && formData.route_map.length > 0 ? (
               <p className={`text-sm ${formData.route_map.length >= 2 ? 'text-green-600' : 'text-yellow-600'} font-medium`}>
                 {formData.route_map.length} {formData.route_map.length === 1 ? 'punto marcado' : 'puntos marcados'} en el mapa
@@ -388,13 +412,13 @@ export default function NewRuta() {
             required
           />
           {getErrorMessage('description')}
-        </div>        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="mb-4">
             <label htmlFor="distance" className="block text-gray-700 font-bold mb-2">
               Distancia (km)
-              <span className="ml-2 text-xs font-normal text-blue-600">
-                (calculada automáticamente)
-              </span>
+              
             </label>
             <div className="relative">
               <input
@@ -422,9 +446,6 @@ export default function NewRuta() {
           <div className="mb-4">
             <label htmlFor="duration" className="block text-gray-700 font-bold mb-2">
               Duración (min)
-              <span className="ml-2 text-xs font-normal text-blue-600">
-                (calculada automáticamente)
-              </span>
             </label>
             <div className="relative">
               <input
@@ -498,7 +519,9 @@ export default function NewRuta() {
             </select>
             {getErrorMessage('terrain_id')}
           </div>
-        </div>        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="mb-4">
             <label htmlFor="landscape_id" className="block text-gray-700 font-bold mb-2">
               Paisaje
@@ -530,13 +553,16 @@ export default function NewRuta() {
             value={formData.country_id} 
           />
           {getErrorMessage('country_id')}
-        </div>        {/* Campo de imagen oculto - la imagen se genera automáticamente con geoapify */}
+        </div>
+        
+        {/* Campo de imagen oculto - la imagen se genera automáticamente con geoapify */}
         <input
           type="hidden"
           name="image"
           value={formData.image}
           onChange={handleChange}
-        />        {getErrorMessage('image')}
+        />
+        {getErrorMessage('image')}
         
         {/* Capturamos la imagen del mapa pero no mostramos la vista previa */}
         {formData.map_image && (
@@ -554,7 +580,8 @@ export default function NewRuta() {
             className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition"
           >
             Cancelar
-          </button>          <button
+          </button>
+          <button
             type="submit"
             className={`px-4 py-2 ${(!formData.route_map || formData.route_map.length < 2) 
               ? 'bg-blue-400 cursor-not-allowed' 
@@ -580,6 +607,7 @@ export default function NewRuta() {
           </button>
         </div>
       </form>
+    {/* Ya no necesitamos el modal aquí, usamos el modal global */}
     </div>
   );
 }

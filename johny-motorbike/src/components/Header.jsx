@@ -7,7 +7,7 @@ export default function Header() {  const [isMenuOpen, setIsMenuOpen] = useState
   const [isScrolled, setIsScrolled] = useState(false)
   const location = useLocation()
   const isHomePage = location.pathname === '/'
-  const { user, logout, showNotification } = useAppContext()
+  const { user, logout, showNotification, showAuthRequiredModal } = useAppContext()
   const navigate = useNavigate()
 
   // Estado para el dropdown de login/registro
@@ -122,13 +122,18 @@ export default function Header() {  const [isMenuOpen, setIsMenuOpen] = useState
                 }
               >
                 Rutas
-              </NavLink>
-              
+              </NavLink>              {/* NavLink modificado para mostrar modal si el usuario no está autenticado */}
               <NavLink 
                 to="/nueva-ruta"
+                onClick={(e) => {
+                  if (!user) {
+                    e.preventDefault();
+                    showAuthRequiredModal();
+                  }
+                }}
                 className={({ isActive }) =>
                   `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive 
+                    (isActive && user) 
                       ? 'bg-blue-700 text-white' 
                       : isTransparent
                         ? 'text-white hover:bg-blue-700/30'
@@ -303,16 +308,20 @@ export default function Header() {  const [isMenuOpen, setIsMenuOpen] = useState
             onClick={() => setIsMenuOpen(false)}
           >
             Rutas
-          </NavLink>
-          
-          <NavLink 
-            to="/nueva-ruta" 
+          </NavLink>          <NavLink 
+            to="/nueva-ruta"
             className={({ isActive }) => 
               `block px-3 py-2 rounded-md text-base font-medium ${
-                isActive ? 'bg-blue-700 text-white' : 'text-gray-700 hover:bg-gray-200'
+                (isActive && user) ? 'bg-blue-700 text-white' : 'text-gray-700 hover:bg-gray-200'
               }`
             }
-            onClick={() => setIsMenuOpen(false)}
+            onClick={(e) => {
+              if (!user) {
+                e.preventDefault();
+                showAuthRequiredModal();
+              }
+              setIsMenuOpen(false);
+            }}
           >
             Crear Ruta
           </NavLink>

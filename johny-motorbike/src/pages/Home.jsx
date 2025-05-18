@@ -6,7 +6,7 @@ import backgroundImage from '../assets/johny-motorbike.jpg'
 import RutaCard from '../components/RutaCard'
 
 export default function Home() {
-  const { routes, loading } = useAppContext()
+  const { routes, loading, user, showAuthRequiredModal } = useAppContext()
   
   // Obtener las 3 rutas mejor puntuadas (ordenadas por rating de mayor a menor)
   const popularRoutes = useMemo(() => {
@@ -44,9 +44,14 @@ export default function Home() {
                 className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition duration-300"
               >
                 Ver todas las rutas
-              </Link>
-              <Link 
-                to="/nueva-ruta" 
+              </Link>              <Link 
+                to="/nueva-ruta"
+                onClick={(e) => {
+                  if (!user) {
+                    e.preventDefault();
+                    showAuthRequiredModal();
+                  }
+                }} 
                 className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-800 px-6 py-3 rounded-lg font-semibold transition duration-300"
               >
                 Crear nueva ruta

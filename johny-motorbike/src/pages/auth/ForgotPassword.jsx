@@ -28,7 +28,7 @@ export default function ForgotPassword() {
         }
       } catch (error) {
         console.error('Error al enviar solicitud:', error);
-        // El error ya se manejará en el contexto, pero capturamos excepciones no controladas
+        
       }
     }
   };

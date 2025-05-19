@@ -120,7 +120,8 @@ const RangeSlider = ({ min, max, value, onChange, title, unit }) => {
             <span>Máximo: {isOpenFilter ? `${maxVal}+` : maxVal} {unit}</span>
           </label>
           <div className="relative h-2">
-            <div className="absolute w-full h-2 bg-gray-200 rounded-lg"></div>            {/* Usamos dos divs separados con clases estáticas en lugar de usar clases condicionales */}
+            <div className="absolute w-full h-2 bg-gray-200 rounded-lg"></div>
+                        {/* Usamos dos divs separados con clases estáticas en lugar de usar clases condicionales */}
             {isOpenFilter ? (
               <div 
                 className="absolute h-2 pointer-events-none bg-gradient-to-r from-blue-500 to-green-500 rounded-l-lg" 
@@ -151,7 +152,8 @@ const RangeSlider = ({ min, max, value, onChange, title, unit }) => {
             />
           </div>
         </div>
-      </div>      {/* Estilos personalizados */}
+      </div>    
+        {/* Estilos personalizados */}
       <style dangerouslySetInnerHTML={{__html: `
         /* Estilos para los sliders */
         input[type='range'] {

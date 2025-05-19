@@ -110,7 +110,7 @@ export default function ChangePassword() {
         setMessage('');
         setMessageType('');
       }
-    }, 3000);
+    }, 2000);
   };
 
   if (!user) return null; // No renderizar si no hay usuario

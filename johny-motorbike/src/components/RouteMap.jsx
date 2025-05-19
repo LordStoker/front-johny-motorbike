@@ -164,12 +164,14 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
   const [country, setCountry] = useState(null);
   const [countryInfo, setCountryInfo] = useState(null);
   const [countryDetectionStatus, setCountryDetectionStatus] = useState('idle'); // idle, detecting, detected, error
-  const [mapLoaded, setMapLoaded] = useState(false); // Estado para el spinner del mapa
+  const [mapLoaded, setMapLoaded] = useState(false); 
+  // Estado para el spinner del mapa
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const isUpdatingMetadata = useRef(false);
   const lastCoordinatesLength = useRef(coordinates.length);
-  const countryDetectionTimer = useRef(null);// Función para obtener el país mediante geocodificación inversa
+  const countryDetectionTimer = useRef(null);
+  // Función para obtener el país mediante geocodificación inversa
   const getCountryFromCoordinates = useCallback(async (coords) => {
     if (!coords || coords.length === 0) return null;
     
@@ -258,7 +260,7 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
           localStorage.setItem(cacheKeyExact, cacheData);
           localStorage.setItem(cacheKeyLowRes, cacheData);
           
-          // También podríamos guardar regiones comunes para España y otros países frecuentes
+          
           if (countryCode === 'ES') {
             // Guardar caché genérica para España
             localStorage.setItem('geo_country_spain', cacheData);
@@ -465,12 +467,12 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
   const captureMap = useCallback(() => {
     // Solo ejecutamos si hay callbacks registrados
     if (onMapCapture && typeof onMapCapture === 'function') {
-      // Ya no necesitamos registros innecesarios en consola
+      
       onMapCapture('auto_generated_map');
     }
     return 'auto_generated_map';
   }, [onMapCapture]);
-  // Ya no capturamos automáticamente el mapa al editar ni invocamos en cada render
+
   useEffect(() => {
     // Usar una referencia para evitar llamadas duplicadas
     const shouldCapture = editable && coordinates.length >= 2 && onMapCapture;
@@ -586,7 +588,8 @@ const RouteMap = ({ routeData, editable = false, onChange, onRouteMetadataChange
                 Borrar toda la ruta
               </button>
             </div>
-          )}          {/* Mostrar información calculada de la ruta */}
+          )}   
+                 {/* Mostrar información calculada de la ruta */}
           {coordinates.length >= 2 && (
             <div className="route-info mt-2 p-2 bg-blue-50 rounded">
               <p className="font-medium">Información calculada automáticamente:</p>

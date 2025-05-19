@@ -3,7 +3,8 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import HelmetIcon from '../assets/helmet-favicon.png'
 import { useAppContext } from '../context/AppContext'
 
-export default function Header() {  const [isMenuOpen, setIsMenuOpen] = useState(false)
+export default function Header() {  
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const location = useLocation()
   const isHomePage = location.pathname === '/'
@@ -122,7 +123,8 @@ export default function Header() {  const [isMenuOpen, setIsMenuOpen] = useState
                 }
               >
                 Rutas
-              </NavLink>              {/* NavLink modificado para mostrar modal si el usuario no está autenticado */}
+              </NavLink>              
+              {/* NavLink para mostrar modal si el usuario no está autenticado */}
               <NavLink 
                 to="/nueva-ruta"
                 onClick={(e) => {

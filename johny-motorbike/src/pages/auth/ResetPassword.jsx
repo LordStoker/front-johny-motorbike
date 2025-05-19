@@ -87,7 +87,7 @@ export default function ResetPassword() {
         // Redirección automática después de 3 segundos
         setTimeout(() => {
           navigate('/login');
-        }, 3000);
+        }, 2000);
       }
     }
   };

@@ -218,7 +218,8 @@ const getFlagCode = (countryName) => {
  * @param {string} props.className - Clases adicionales para estilizar el contenedor
  */
 const RutaCard = ({ ruta, className = '' }) => {
-  const { user, checkFavorite, toggleFavorite, favoriteRouteIds, countries } = useAppContext();  const [isFavorite, setIsFavorite] = useState(false);
+  const { user, checkFavorite, toggleFavorite, favoriteRouteIds, countries } = useAppContext();
+  const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -298,7 +299,9 @@ const RutaCard = ({ ruta, className = '' }) => {
     };
   }, [user, ruta?.id, checkFavorite, favoriteRouteIds]);
     // Estado para manejar la animación del corazón
-  const [heartKey, setHeartKey] = useState(0); // Clave para forzar una nueva animación  // Función para manejar el clic en el botón de favorito - versión optimizada
+  const [heartKey, setHeartKey] = useState(0); 
+  // Clave para forzar una nueva animación  
+  // Función para manejar el clic en el botón de favorito
   const handleToggleFavorite = async (e) => {
     e.preventDefault(); // Evitar que el enlace de la tarjeta se active
     e.stopPropagation();

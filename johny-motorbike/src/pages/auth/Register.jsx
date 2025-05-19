@@ -85,7 +85,7 @@ export default function Register() {
         // Redireccionar después de 2.5 segundos
         setTimeout(() => {
           navigate('/')
-        }, 2500)
+        }, 1500)
       }
     }
   }

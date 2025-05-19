@@ -13,7 +13,8 @@ import { landscapeIcons, terrainIcons } from './RouteIcons';
  * @param {Array} props.selectedItems - Array con los IDs de los items seleccionados
  * @param {Function} props.onItemToggle - Función para manejar la selección/deselección
  */
-const IconSelector = ({ title, items, selectedItems, onItemToggle }) => {  // Este componente usa los iconos centralizados desde RouteIcons.jsx
+const IconSelector = ({ title, items, selectedItems, onItemToggle }) => {
+    // Este componente usa los iconos centralizados desde RouteIcons.jsx
   
   // Determinar qué conjunto de iconos usar basado en el título
   const icons = title === 'Paisaje' ? landscapeIcons : terrainIcons;  return (

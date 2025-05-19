@@ -139,7 +139,7 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
         return false;
       }
       
-      // Si hay un error específico, lo mostramos (temporal para depuración)
+      // Si hay un error específico, lo mostramos
       if (err.response?.status === 400) {
         setAuthError(err.response?.data?.message || 'Error en la solicitud. Revisa los datos e intenta de nuevo.');
         return false;
@@ -193,7 +193,7 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
   }  // Obtener comentarios del usuario - memoizado con useCallback para evitar rerenderizados
   const getUserComments = useCallback(async (userId, page = 1, perPage = 5) => {
     try {
-      // Eliminamos logs para evitar saturar la consola
+      
       
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -441,7 +441,7 @@ export const AppProvider = ({ children }) => {  // Estado para almacenar todos l
     }
   }, [user, favoriteRoutes, favoriteRouteIds, isLoadingFavoriteIds]);
   
-  // Verificar si una ruta es favorita - versión altamente optimizada que prioriza el cache local
+  // Verificar si una ruta es favorita
   const checkFavorite = useCallback(async (routeId) => {
     if (!user) return false;
     

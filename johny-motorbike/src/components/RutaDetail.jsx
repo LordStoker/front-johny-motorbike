@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import defaultRouteImage from '../assets/default-route-image.jpg';
 import RouteComments from './RouteComments';
 import StarRating from './StarRating';
 import RouteIcon from './RouteIcons';
@@ -461,15 +460,20 @@ const RutaDetail = ({ ruta: initialRoute }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>{Math.floor(rutaData.duration)} minutos</span>
-            </div>
-
-            {/* Creador de la ruta */}
+            </div>            {/* Creador de la ruta */}
             {rutaData.user && (
               <div className="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span>Creada por {rutaData.user.name} {rutaData.user.last_name || ''}</span>
+                <span>Creada por {' '}
+                  <Link 
+                    to={`/perfil/${rutaData.user.id}`}
+                    className="text-blue-600 hover:text-blue-800 hover:underline transition-colors font-medium"
+                  >
+                    {rutaData.user.name} {rutaData.user.last_name || ''}
+                  </Link>
+                </span>
               </div>
             )}
             

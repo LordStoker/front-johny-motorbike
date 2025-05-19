@@ -14,7 +14,7 @@ import { difficultyIcons } from './RouteIcons';
 const FilterBar = ({ onFilterChange }) => {
   const { landscapes, terrains, difficulties, countries } = useAppContext();
     // Constantes para valores máximos
-  const MAX_DISTANCE = 999; // 500+ km (filtro abierto)
+  const MAX_DISTANCE = 999; // 999+ km (filtro abierto)
   const MAX_DURATION = 480; // 480+ minutos (8 horas) (filtro abierto)
   
   // Estados para cada tipo de filtro
@@ -58,7 +58,7 @@ const FilterBar = ({ onFilterChange }) => {
     ratingMin,
     selectedCountries,
     searchText
-  ]); // Eliminamos onFilterChange de las dependencias
+  ]); 
   // Función para limpiar todos los filtros
   const clearAllFilters = () => {
     setDistanceRange([0, MAX_DISTANCE]); // Restablecer a filtro abierto

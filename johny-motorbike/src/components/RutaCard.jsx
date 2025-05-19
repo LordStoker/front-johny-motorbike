@@ -451,36 +451,40 @@ const RutaCard = ({ ruta, className = '' }) => {
     
   }
   
-  return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col ${className}`}>      {/* Imagen de la ruta */}
-      <div className="relative w-full h-48 overflow-hidden">
-        {imageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
-          </div>
-        )}
-        {imageError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p className="text-sm text-gray-500">Error al cargar la imagen</p>
-          </div>
-        )}
-        <img 
-          src={routeImage}
-          alt={ruta.name}
-          className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-          onLoad={() => setImageLoading(false)}
-          onError={() => {
-            setImageLoading(false);
-            setImageError(true);
-          }}
-        /><button          onClick={handleToggleFavorite}
+  return (    <div className={`bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col ${className}`}>     
+     {/* Imagen de la ruta */}      
+     <div className="relative w-full h-48 overflow-hidden">
+        <Link to={`/rutas/${ruta.id}`} className="block w-full h-full">
+          {imageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
+            </div>
+          )}
+          {imageError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-sm text-gray-500">Error al cargar la imagen</p>
+            </div>
+          )}
+          <img 
+            src={routeImage}
+            alt={ruta.name}
+            className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+            onLoad={() => setImageLoading(false)}
+            onError={() => {
+              setImageLoading(false);
+              setImageError(true);
+            }}
+          />
+        </Link>
+        <button
+          onClick={handleToggleFavorite}
           disabled={isLoading}
           className="absolute top-3 right-3 bg-white/70 hover:bg-white p-1.5 rounded-full shadow-sm transition-all active:scale-90 hover:shadow-md transform hover:-translate-y-0.5"
           aria-label={isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"}
-        >          {isLoading ? (
+        >{isLoading ? (
             <svg 
               className="animate-spin h-5 w-5 text-blue-500" 
               xmlns="http://www.w3.org/2000/svg" 
@@ -520,9 +524,10 @@ const RutaCard = ({ ruta, className = '' }) => {
         </button>
       </div>
       
-      {/* Contenido de la tarjeta */}
-      <div className="p-5 flex-1 flex flex-col">
-        <h2 className="text-xl font-bold text-blue-800 mb-2">{ruta.name}</h2>
+      {/* Contenido de la tarjeta */}      <div className="p-5 flex-1 flex flex-col">
+        <Link to={`/rutas/${ruta.id}`} className="hover:text-blue-700">
+          <h2 className="text-xl font-bold text-blue-800 mb-2 hover:underline">{ruta.name}</h2>
+        </Link>
         <p className="text-gray-700 mb-3 line-clamp-2">
           {ruta.description}
         </p>
@@ -589,7 +594,7 @@ const RutaCard = ({ ruta, className = '' }) => {
           )}
         </div>        {/* Mostrar el país */}
         {countryInfo && (
-          <div className="flex items-center text-sm text-gray-600 mb-4">
+          <div className="flex items-center text-sm text-gray-600 mb-2">
             {countryInfo.name && (
               <img 
                 src={`https://flagcdn.com/16x12/${getFlagCode(countryInfo.name)}.png`}
@@ -602,14 +607,21 @@ const RutaCard = ({ ruta, className = '' }) => {
             </span>
           </div>
         )}
-        
-        {/* Botón para ver detalles */}
-        <Link 
-          to={`/rutas/${ruta.id}`} 
-          className="block text-center bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition mt-auto"
-        >
-          Ver detalles
-        </Link> 
+
+        {/* Mostrar creador de la ruta */}
+        {ruta.user && (
+          <div className="flex items-center text-sm text-gray-600 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <Link 
+              to={`/usuarios/${ruta.user.id}`} 
+              className="hover:text-blue-700 hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {ruta.user.name} {ruta.user.last_name || ''}
+            </Link>
+          </div>        )}
       </div>
       
       {/* Estilos para animaciones avanzadas */}

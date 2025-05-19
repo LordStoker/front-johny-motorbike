@@ -371,7 +371,7 @@ const RutaDetail = ({ ruta: initialRoute }) => {
         <p className="text-center text-gray-500">Cargando detalles de la ruta...</p>
       </div>
     );
-  }  // Ya no necesitamos generar la imagen del mapa, ya que esta se mostrará solo en las tarjetas
+  } 
     return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">

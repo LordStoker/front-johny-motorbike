@@ -460,7 +460,8 @@ const RutaDetail = ({ ruta: initialRoute }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>{Math.floor(rutaData.duration)} minutos</span>
-            </div>            {/* Creador de la ruta */}
+            </div>
+            {/* Creador de la ruta */}
             {rutaData.user && (
               <div className="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -468,7 +469,7 @@ const RutaDetail = ({ ruta: initialRoute }) => {
                 </svg>
                 <span>Creada por {' '}
                   <Link 
-                    to={`/perfil/${rutaData.user.id}`}
+                    to={`/usuarios/${rutaData.user.id}`}
                     className="text-blue-600 hover:text-blue-800 hover:underline transition-colors font-medium"
                   >
                     {rutaData.user.name} {rutaData.user.last_name || ''}

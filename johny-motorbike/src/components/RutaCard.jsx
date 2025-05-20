@@ -396,14 +396,14 @@ const RutaCard = ({ ruta, className = '' }) => {
         const latDiff = bounds.maxLat - bounds.minLat;
         const lngDiff = bounds.maxLng - bounds.minLng;
         const maxDiff = Math.max(latDiff, lngDiff);
-        let zoom = 13; // Zoom predeterminado
+        let zoom = 10; // Zoom predeterminado
         
         // Ajustar zoom según la distancia
-        if (maxDiff > 0.5) zoom = 10;
-        if (maxDiff > 1) zoom = 9;
-        if (maxDiff > 2) zoom = 8;
-        if (maxDiff > 4) zoom = 7;
-        if (maxDiff > 8) zoom = 6;
+        if (maxDiff > 0.5) zoom = 9;
+        if (maxDiff > 1) zoom = 6;
+        if (maxDiff > 2) zoom = 5;
+        if (maxDiff > 4) zoom = 3;
+        if (maxDiff > 8) zoom = 4;
         
         // Crear URL de Geoapify
         const apiKey = import.meta.env.VITE_GEOAPIFY_API_KEY;

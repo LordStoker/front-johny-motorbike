@@ -30,7 +30,7 @@ Ahora deberías poder ver los mapas estáticos en:
 
 Si sigues teniendo problemas, asegúrate de:
 1. Haber copiado correctamente la clave API
-2. Haber reiniciado la aplicación después de cambiar el archivo .env.local
+2. Haber reiniciado la aplicación después de cambiar el archivo .env
 3. No tener bloqueadores de publicidad que puedan estar impidiendo las peticiones a servicios externos
 
 ## Límites del plan gratuito
